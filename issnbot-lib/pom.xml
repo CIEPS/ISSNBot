@@ -35,6 +35,11 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 		
+		<dependency>
+            <groupId>org.wikidata.wdtk</groupId>
+            <artifactId>wdtk-wikibaseapi</artifactId>
+        </dependency>
+
 	</dependencies>
 
 </project>
