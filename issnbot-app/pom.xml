@@ -21,6 +21,26 @@
 	<build>
 		<plugins>
 
+
+			<!-- Ce plugin ajoute les elements suivants dans le fichier META-INF/MANIFEST.MF 
+				du jar final : Implementation-Title: ${project.artifactId} Implementation-Version: 
+				${project.version} Implementation-Vendor-Id: ${project.groupId} Cela permet 
+				de récupérer la version Maven dans le code, via cette ligne : App.class.getPackage().getImplementationVersion(); 
+				L'autre possibilité est d'aller lire le fichier de properties généré automatiquement 
+				par Maven à cet endroit : META-INF/maven/${project.groupId}/${project.artifactId}/pom.properties -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
@@ -44,6 +64,14 @@
 					            </excludes>
 					        </filter>
 					    </filters>
+					  <transformers>
+						<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<manifestEntries>
+							  <Main-Class>org.issn.issnbot.app.Main</Main-Class>
+							  <Class-Path>.</Class-Path>
+							</manifestEntries>
+			 			</transformer>
+			 		  </transformers>
 				    </configuration>
 				  </execution>
 				</executions>
@@ -74,6 +102,11 @@
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>me.tongfei</groupId>
+            <artifactId>progressbar</artifactId>
         </dependency>
 
         <!-- ISSN Bot library -->

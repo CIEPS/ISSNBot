@@ -35,10 +35,19 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 		
+		<!-- Wikidata API -->
 		<dependency>
             <groupId>org.wikidata.wdtk</groupId>
             <artifactId>wdtk-wikibaseapi</artifactId>
         </dependency>
+
+        <!-- CSV Processing -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-csv</artifactId>
+		    <version>1.8</version>
+		</dependency>
+
 
 	</dependencies>
 

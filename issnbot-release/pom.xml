@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.issn</groupId>
+	<artifactId>issnbot-release</artifactId>
+	<packaging>pom</packaging>
+
+	<parent>
+		<groupId>org.issn</groupId>
+		<artifactId>issnbot-root-pom</artifactId>
+	    <version>0.1</version>
+        <relativePath>../pom.xml</relativePath>
+	</parent>
+
+
+	<name>ISSN Bot release</name>
+	<description>Release package of ISSN Bot</description>
+
+
+	<build>
+		<plugins>
+			<plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>assemble</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/delivery.xml</descriptor>
+                    </descriptors>
+                    <attach>true</attach>
+                </configuration>
+            </plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+            <groupId>org.issn</groupId>
+            <artifactId>issnbot-app</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+            <classifier>onejar</classifier>
+        </dependency>
+	</dependencies>
+
+</project>

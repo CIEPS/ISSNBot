@@ -12,6 +12,7 @@
     <modules>
         <module>issnbot-lib</module>
         <module>issnbot-app</module>
+        <module>issnbot-release</module>
     </modules>
 
     <properties>
@@ -76,6 +77,13 @@
                 <artifactId>wdtk-wikibaseapi</artifactId>
                 <version>0.11.1</version>
             </dependency>
+
+            <!-- Progress bar -->
+              <dependency>
+                  <groupId>me.tongfei</groupId>
+                  <artifactId>progressbar</artifactId>
+                  <version>0.8.1</version>
+              </dependency>
             
         </dependencies>
     </dependencyManagement>
