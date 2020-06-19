@@ -77,6 +77,26 @@
 				</executions>
 		    </plugin>
 
+		    <plugin>
+		      <groupId>org.codehaus.mojo</groupId>
+		      <artifactId>exec-maven-plugin</artifactId>
+		      <version>1.2</version>
+		      <executions>
+		        <execution>
+		          <id>generate-command-properties</id>
+		          <phase>prepare-package</phase>
+		          <goals>
+		            <goal>java</goal>
+		          </goals>
+		        </execution>
+		      </executions>
+		      <configuration>
+		        <mainClass>org.issn.issnbot.app.ParameterFilesGenerator</mainClass>
+		        <arguments>${project.build.directory}/classes/parameters</arguments>
+		      </configuration>
+		    </plugin>
+
+
 		</plugins>
 	</build>
 

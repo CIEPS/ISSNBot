@@ -11,9 +11,8 @@ public class CSVSerialEntryReaderTest {
 
 	@Test
 	public void test() throws Exception {
-		CSVSerialEntryReader reader = new CSVSerialEntryReader();
-		InputStream input = this.getClass().getResourceAsStream("basic_test.csv");
-		List<SerialEntry> entries = reader.read(input);
+		CSVSerialEntryReader reader = new CSVSerialEntryReader(this.getClass().getResourceAsStream("basic_test.csv"));
+		List<SerialEntry> entries = reader.read();
 		
 		Assert.assertTrue(entries.size() == 1);
 	}

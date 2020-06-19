@@ -1,5 +1,6 @@
 package org.issn.issnbot.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +11,9 @@ public class SerialEntry {
 	private ValueWithReference title;
 	private ValueWithReference lang;
 	private ValueWithReference country;
-	private	List<IssnValue> issns;
+	private ValuesWithReference urls;
+	private	List<IssnValue> issns = new ArrayList<IssnValue>();
+	private List<String> cancelledIssns = new ArrayList<String>();
 	
 	
 	public ValueWithReference getLang() {
@@ -46,6 +49,12 @@ public class SerialEntry {
 	public String getWikidataId() {
 		return wikidataId;
 	}
+	public List<String> getCancelledIssns() {
+		return cancelledIssns;
+	}
+	public void setCancelledIssns(List<String> cancelledIssns) {
+		this.cancelledIssns = cancelledIssns;
+	}
 	/**
 	 * A Q-ID e.g. Q123456
 	 * @param wikidataId
@@ -53,7 +62,18 @@ public class SerialEntry {
 	public void setWikidataId(String wikidataId) {
 		this.wikidataId = wikidataId;
 	}
-	
+
+	public ValuesWithReference getUrls() {
+		return urls;
+	}
+	public void setUrls(ValuesWithReference urls) {
+		this.urls = urls;
+	}
+
+
+
+
+
 	public class ValueWithReference {
 		private String value;
 		private String reference;
@@ -75,7 +95,30 @@ public class SerialEntry {
 		}
 		public void setReference(String reference) {
 			this.reference = reference;
+		}		
+	}
+	
+	public class ValuesWithReference {
+		private List<String> values;
+		private String reference;
+		
+		public ValuesWithReference(List<String> values, String reference) {
+			super();
+			this.values = values;
+			this.reference = reference;
 		}
 		
+		public List<String> getValues() {
+			return values;
+		}
+		public void setValues(List<String> values) {
+			this.values = values;
+		}
+		public String getReference() {
+			return reference;
+		}
+		public void setReference(String reference) {
+			this.reference = reference;
+		}		
 	}
 }

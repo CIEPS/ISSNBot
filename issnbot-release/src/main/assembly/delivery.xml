@@ -18,7 +18,23 @@
                 <include>${project.groupId}:issnbot-app:jar:onejar:${project.version}</include>
             </includes>
         </dependencySet>
+
+        <!-- copy the 'parameters' directory in the zip -->
+        <dependencySet>
+            <useProjectArtifact>true</useProjectArtifact>
+            <useProjectAttachments>false</useProjectAttachments>
+            <outputDirectory>/</outputDirectory>
+            <unpack>true</unpack>
+            <unpackOptions>
+                <includes><include>parameters/*</include></includes>
+            </unpackOptions>
+            <includes>
+                <include>${project.groupId}:issnbot-app:jar:onejar:${project.version}</include>
+            </includes>
+        </dependencySet>
+
     </dependencySets>
+
     <fileSets>
         <!-- copy the src/main/resources directory in the zip -->
         <fileSet>
@@ -38,5 +54,29 @@
 
           </includes>
         </fileSet>
+
+        <!-- create empty 'input', 'output' and 'error' folders -->
+        <fileSet>
+          <directory>.</directory>
+          <outputDirectory>input</outputDirectory>
+          <excludes>
+            <exclude>*/**</exclude>
+          </excludes>
+        </fileSet>
+        <fileSet>
+          <directory>.</directory>
+          <outputDirectory>output</outputDirectory>
+          <excludes>
+            <exclude>*/**</exclude>
+          </excludes>
+        </fileSet>
+        <fileSet>
+          <directory>.</directory>
+          <outputDirectory>error</outputDirectory>
+          <excludes>
+            <exclude>*/**</exclude>
+          </excludes>
+        </fileSet>
+        
     </fileSets>
 </assembly>

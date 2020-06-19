@@ -1,16 +1,14 @@
 package org.issn.issnbot.model;
 
-import org.wikidata.wdtk.datamodel.interfaces.ItemIdValue;
-
 public class IssnValue {
 
 	private String issn;
 	private String keyTitle;
-	private ItemIdValue distributionFormat;
+	private String distributionFormat;
 	
 	
 	
-	public IssnValue(String issn, String keyTitle, ItemIdValue distributionFormat) {
+	public IssnValue(String issn, String keyTitle, String distributionFormat) {
 		super();
 		this.issn = issn;
 		this.keyTitle = keyTitle;
@@ -29,10 +27,10 @@ public class IssnValue {
 	public void setKeyTitle(String keyTitle) {
 		this.keyTitle = keyTitle;
 	}
-	public ItemIdValue getDistributionFormat() {
+	public String getDistributionFormat() {
 		return distributionFormat;
 	}
-	public void setDistributionFormat(ItemIdValue distributionFormat) {
+	public void setDistributionFormat(String distributionFormat) {
 		this.distributionFormat = distributionFormat;
 	}
 	

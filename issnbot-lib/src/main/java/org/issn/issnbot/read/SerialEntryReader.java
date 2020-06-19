@@ -8,6 +8,6 @@ import org.issn.issnbot.model.SerialEntry;
 
 public interface SerialEntryReader {
 
-	public List<SerialEntry> read(InputStream is) throws IOException, SerialEntryReadException;
+	public List<SerialEntry> read() throws IOException, SerialEntryReadException;
 	
 }
