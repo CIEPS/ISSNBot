@@ -40,20 +40,18 @@
 
   
     <logger name="org.issn.issnbot">
+        <appender-ref ref="STDOUT" />
         <appender-ref ref="ALL_FILE" />
         <appender-ref ref="ERROR_FILE" />
     </logger>
     
-    <logger name="org.issn.issnbot.IssnBotReportListener" additivity="false">
+    <logger name="org.issn.issnbot.listeners.IssnBotReportListener" additivity="false">
         <appender-ref ref="REPORT_FILE" />
         <appender-ref ref="STDOUT" />
     </logger>
 
   	<!-- shut up some stuff -->
-    <logger name="org.issn.issnbot.WikidataSparqlCountryIdProvider">
-		<level value="INFO" />
-	</logger> 
-	<logger name="org.issn.issnbot.WikidataSparqlLanguageIdProvider">
+    <logger name="org.issn.issnbot.providers">
 		<level value="INFO" />
 	</logger> 
     
@@ -65,7 +63,11 @@
 	
 	<logger name="org.eclipse.rdf4j">
 		<level value="INFO" />
-	</logger>     
+	</logger>   
+	
+	<logger name="org.wikidata.wdtk" additivity="false">
+        <level value="TRACE" />
+    </logger>  
          
     <!-- ** -->
      

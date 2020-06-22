@@ -1,17 +1,12 @@
 package org.issn.issnbot.listeners;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.io.Writer;
 
-import org.issn.issnbot.WikidataUpdateStatus;
+import org.issn.issnbot.model.SerialEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +15,15 @@ public class IssnBotOutputListener implements IssnBotListener {
 	private Logger log = LoggerFactory.getLogger(this.getClass().getName());
 
 	protected File outputDirectory;
+	protected File errorDirectory;
 	protected UpdateStatusesCSVWriter updateWriter;
 	
+	protected Writer errorWriter;
 	
-	
-	public IssnBotOutputListener(File outputDirectory) {
+	public IssnBotOutputListener(File outputDirectory, File errorDirectory) {
 		super();
 		this.outputDirectory = outputDirectory;
+		this.errorDirectory = errorDirectory;
 	}
 
 	@Override
@@ -49,7 +46,9 @@ public class IssnBotOutputListener implements IssnBotListener {
 			
 			this.updateWriter = new UpdateStatusesCSVWriter(writer);
 			
-			// writeHeader
+			File errorFile = new File(this.errorDirectory, batchId+"_error.csv");
+			FileOutputStream errorOs = new FileOutputStream(errorFile);
+			this.errorWriter = new OutputStreamWriter(errorOs);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -60,29 +59,32 @@ public class IssnBotOutputListener implements IssnBotListener {
 	public void stopBatch(String batchId) {
 		try {
 			this.updateWriter.close();
+			this.errorWriter.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	@Override
-	public void startSerial(String issnl, String wikidataId) {
+	public void startSerial(SerialEntry entry) {
 		// nothing
 	}
 
 	@Override
-	public void successSerial(String issnl, String wikidataId, Map<Integer, PropertyStatus> statuses) {
+	public void successSerial(SerialEntry entry, SerialResult result) {
 		try {
-			this.updateWriter.success(issnl, wikidataId, statuses);
+			this.updateWriter.success(entry.getIssnL(), entry.getWikidataId(), result.getStatuses(), result.getPreviousValuesStatuses());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	@Override
-	public void errorSerial(String issnl, String wikidataId) {
+	public void errorSerial(SerialEntry entry, String message) {
 		try {
-			this.updateWriter.error(issnl, wikidataId);
+			this.updateWriter.error(entry.getIssnL(), entry.getWikidataId(), message);
+			this.errorWriter.write(entry.getRecord());
+			this.errorWriter.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

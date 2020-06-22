@@ -44,19 +44,16 @@
         <appender-ref ref="ERROR_FILE" />
     </logger>
     
-    <logger name="org.issn.issnbot.IssnBotReportListener" additivity="false">
+    <logger name="org.issn.issnbot.listeners.IssnBotReportListener" additivity="false">
+        <appender-ref ref="ALL_FILE" />
         <appender-ref ref="REPORT_FILE" />
         <appender-ref ref="STDOUT" />
     </logger>
 
   	<!-- shut up some stuff -->
-    <logger name="org.issn.issnbot.WikidataSparqlCountryIdProvider">
+    <logger name="org.issn.issnbot.providers">
 		<level value="INFO" />
 	</logger> 
-	<logger name="org.issn.issnbot.WikidataSparqlLanguageIdProvider">
-		<level value="INFO" />
-	</logger> 
-    
     
     <!-- 3rdparty Loggers -->
 	<logger name="org.apache.http">

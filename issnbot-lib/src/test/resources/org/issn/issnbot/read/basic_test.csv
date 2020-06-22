@@ -1,2 +1,3 @@
-"issn_l","wikidata_qid","title","title ref ISSN","Code ISO de langue pour le label","ISSN de référence pour la langue","Code ISO du Pays de publication","ISSN de référence pour le pays de publication","URL pour les publications en ligne","ISSN de référence pour les URLS de publication en ligne","ISSN 1","Key Title 1","Format 1","ISSN 2","Key Title 2","Format 2","ISSN 3","Key Title 3","Format 3","ISSN 4","Key Title 4","Format 4","Cancelled ISSN 1","Cancelled ISSN 2"
-"1234-5678","Q123456","toto","1234-5678","fra","1234-5678","fr","1234-5678","http://www.sparna.fr","1234-5678","1234-5678","KeyTitle","cr",,,,,,,,,,,
+ISSN -L	Wiki-ID	Label (titre)	ISSN ref titre	Code ISO de langue	ISSN ref langue	ISO pays	ISSN ref pays	URLs	ISSN ref URLs	ISSN1	keytitle1	format1	ISSN2	keytitle2	format2	ISSN3	keytitle3	format3	ISSN4	keytitle4	format4	cancelled ISSN
+1374-7762	Q1000226	Krautgarten	1374-7762	mul	1374-7762	DEU	1374-7762			1374-7762	 Krautgarten (Blieskastel)	ta										
+0946-2856	Q1000406	 Process	0946-2856	ger	0946-2856	DEU	0946-2856			0946-2856	 Process (Würzburg)	ta										

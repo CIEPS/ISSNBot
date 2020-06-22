@@ -14,7 +14,8 @@ public class CSVSerialEntryReaderTest {
 		CSVSerialEntryReader reader = new CSVSerialEntryReader(this.getClass().getResourceAsStream("basic_test.csv"));
 		List<SerialEntry> entries = reader.read();
 		
-		Assert.assertTrue(entries.size() == 1);
+		Assert.assertTrue(entries.size() == 2);
+		Assert.assertTrue(entries.get(1).getTitle().getValue().equals("Process"));
 	}
 
 }

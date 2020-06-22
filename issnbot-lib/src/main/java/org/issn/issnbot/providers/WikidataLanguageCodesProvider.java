@@ -2,6 +2,7 @@ package org.issn.issnbot.providers;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
@@ -39,6 +40,10 @@ public class WikidataLanguageCodesProvider {
 
 		this.languageCodes = new HashMap<>();
 
+		// hardcode value for mis and mul
+		this.languageCodes.put("mis", new WikidataLanguage(22283016, "mis", "mis", null));
+		this.languageCodes.put("mul", new WikidataLanguage(-1, "mul", "mul", null));
+		
 		Repository repo = new SPARQLRepository(WikidataIssnModel.WIKIDATA_SPARQL_ENDPOINT);
 
 		try (RepositoryConnection conn = repo.getConnection()) {
@@ -49,6 +54,7 @@ public class WikidataLanguageCodesProvider {
 					+ "  ?qid wdt:P"+WikidataIssnModel.ISO_639_2_PROPERTY_ID+" ?iso6392 ."+"\n"
 					+ "  OPTIONAL { ?qid wdt:P"+WikidataIssnModel.ISO_639_1_PROPERTY_ID+" ?iso6391 }"+"\n"
 					+ "} ORDER BY ?wikimediaCode";
+			log.debug("Issuing SPARQL \n"+queryString);
 			TupleQuery tupleQuery = conn.prepareTupleQuery(queryString);
 			try (TupleQueryResult result = tupleQuery.evaluate()) {
 				while (result.hasNext()) {  // iterate over the result
@@ -67,6 +73,7 @@ public class WikidataLanguageCodesProvider {
 		}
 		
 		log.debug("Language code cache contains "+this.languageCodes.size()+" language codes.");
+		log.info("Language map : \n"+this.languageCodes.entrySet().stream().map(e -> e.getKey()+" => "+e.getValue().getWikimediaCode()).collect(Collectors.joining("\n")));
 
 	}
 }

@@ -46,6 +46,8 @@ public final class WikidataIssnModel {
 	public static final int FAKE_ISSN3_PROPERTY_ID = ISSN_PROPERTY_ID*100;
 	public static final int FAKE_ISSN4_PROPERTY_ID = ISSN_PROPERTY_ID*1000;
 	
+	public static final int FAKE_CANCELLED_ISSN_PROPERTY = ISSN_PROPERTY_ID*-1;
+	
 	// this is needed to fetch the country codes
 	public static final int ISO_3166_1_ALPHA_3_PROPERTY_ID = 298;
 	
@@ -60,7 +62,12 @@ public final class WikidataIssnModel {
 	public static final ItemIdValue WITHDRAWN_IDENTIFER_VALUE = Datamodel.makeWikidataItemIdValue("Q"+21441764);
 	
 	// this is Q-ID
+	public static final ItemIdValue INCORRECT_IDENTIFER_VALUE = Datamodel.makeWikidataItemIdValue("Q"+54975531);
+	
+	// this is Q-ID
 	public static final ItemIdValue ISSN_REGISTER_VALUE = Datamodel.makeWikidataItemIdValue("Q"+70460099);
+	
+	public static final ItemIdValue WORLDWIDE_VALUE = Datamodel.makeWikidataItemIdValue("Q"+13780930);
 	
 	public static PropertyIdValue toWikidataProperty(int propertyId) {
 		return new PropertyIdValueImpl("P"+propertyId, WIKIDATA_IRI);

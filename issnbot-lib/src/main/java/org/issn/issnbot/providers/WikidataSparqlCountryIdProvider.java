@@ -26,7 +26,7 @@ public class WikidataSparqlCountryIdProvider implements WikidataIdProviderIfc {
 	}
 
 	@Override
-	public ItemIdValue getWikidataId(String code) {
+	public ItemIdValue getWikidataId(String code) {		
 		return countryIdCache.get(code);
 	}
 
@@ -34,11 +34,15 @@ public class WikidataSparqlCountryIdProvider implements WikidataIdProviderIfc {
 
 		this.countryIdCache = new HashMap<>();
 
+		// hardcode value for worldwide
+		this.countryIdCache.put("INT", WikidataIssnModel.WORLDWIDE_VALUE);
+		
 		Repository repo = new SPARQLRepository(WikidataIssnModel.WIKIDATA_SPARQL_ENDPOINT);
 
 		try (RepositoryConnection conn = repo.getConnection()) {
 			String queryString = "SELECT ?iso31661_alpha3 ?qid WHERE { ?qid <http://www.wikidata.org/prop/direct/P"+WikidataIssnModel.ISO_3166_1_ALPHA_3_PROPERTY_ID+"> ?iso31661_alpha3 } ORDER BY ?iso31661_alpha3";
 			TupleQuery tupleQuery = conn.prepareTupleQuery(queryString);
+			log.debug("Issuing SPARQL \n"+queryString);
 			try (TupleQueryResult result = tupleQuery.evaluate()) {
 				while (result.hasNext()) {  // iterate over the result
 					BindingSet bindingSet = result.next();

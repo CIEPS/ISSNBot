@@ -29,6 +29,7 @@ public class UpdateStatusesCSVWriter implements UpdateStatusesWriter {
 		printer.print("ISSN-L");
 		printer.print("Wikidata QID");
 		printer.print("Status");
+		printer.print("Message");
 		printer.print("ISSN-L (P"+WikidataIssnModel.ISSNL_PROPERTY_ID+")");
 		printer.print("Label");
 		printer.print("Alias");
@@ -40,27 +41,42 @@ public class UpdateStatusesCSVWriter implements UpdateStatusesWriter {
 		printer.print("ISSN2 (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.print("ISSN3 (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.print("ISSN4 (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
+		printer.print("Cancelled ISSNs (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
+		printer.print("Previous values of Place of Publication (P"+WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID+")");
+		printer.print("Previous values of Place of Official Website (P"+WikidataIssnModel.OFFICIAL_WEBSITE_PROPERTY_ID+")");
+		printer.print("Previous values of ISSN (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
+		printer.print("Previous Cancelled ISSNs (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.println();
 	}
 
 	@Override
-	public void success(String issnl, String qid, Map<Integer, IssnBotListener.PropertyStatus> updateStatuses) throws IOException {
+	public void success(			String issnl,
+			String qid,
+			Map<Integer, IssnBotListener.PropertyStatus> updateStatuses,
+			Map<Integer, IssnBotListener.PropertyStatus> previousValueUpdateStatuses
+	) throws IOException {
 		printer.print(sdf.format(new Date()));
 		printer.print(issnl);
 		printer.print(qid);
 		printer.print("SUCCESS");
+		// empty message when success
+		printer.print("");
 		for (Map.Entry<Integer, IssnBotListener.PropertyStatus> aPropStatus : updateStatuses.entrySet()) {
+			printer.print(aPropStatus.getValue().status+((aPropStatus.getValue().precision != null)?" ("+aPropStatus.getValue().precision+")":""));
+		}
+		for (Map.Entry<Integer, IssnBotListener.PropertyStatus> aPropStatus : previousValueUpdateStatuses.entrySet()) {
 			printer.print(aPropStatus.getValue().status+((aPropStatus.getValue().precision != null)?" ("+aPropStatus.getValue().precision+")":""));
 		}
 		printer.println();
 	}
 	
 	@Override
-	public void error(String issnl, String qid) throws IOException {
+	public void error(String issnl, String qid, String message) throws IOException {
 		printer.print(sdf.format(new Date()));
 		printer.print(issnl);
 		printer.print(qid);
 		printer.print("ERROR");
+		printer.print(message);
 		printer.println();
 	}
 	

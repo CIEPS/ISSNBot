@@ -40,6 +40,7 @@ public class WikidataSparqlLanguageIdProvider implements WikidataIdProviderIfc {
 		try (RepositoryConnection conn = repo.getConnection()) {
 			String queryString = "SELECT ?iso6392 ?qid WHERE { ?qid <http://www.wikidata.org/prop/direct/P"+WikidataIssnModel.ISO_639_2_PROPERTY_ID+"> ?iso6392 } ORDER BY ?iso6392";
 			TupleQuery tupleQuery = conn.prepareTupleQuery(queryString);
+			log.debug("Issuing SPARQL \n"+queryString);
 			try (TupleQueryResult result = tupleQuery.evaluate()) {
 				while (result.hasNext()) {  // iterate over the result
 					BindingSet bindingSet = result.next();

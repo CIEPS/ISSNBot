@@ -15,6 +15,10 @@ public class SerialEntry {
 	private	List<IssnValue> issns = new ArrayList<IssnValue>();
 	private List<String> cancelledIssns = new ArrayList<String>();
 	
+	// complete original CSV record
+	private String record;
+	
+	private long recordNumber;
 	
 	public ValueWithReference getLang() {
 		return lang;
@@ -69,8 +73,47 @@ public class SerialEntry {
 	public void setUrls(ValuesWithReference urls) {
 		this.urls = urls;
 	}
+	
+	
 
-
+	public String getRecord() {
+		return record;
+	}
+	public void setRecord(String record) {
+		this.record = record;
+	}
+	
+	public long getRecordNumber() {
+		return recordNumber;
+	}
+	public void setRecordNumber(long recordNumber) {
+		this.recordNumber = recordNumber;
+	}
+	
+	
+	public boolean hasOfficialWebsite(String value) {
+		if(this.urls != null && this.urls.values != null) {
+			return this.urls.values.stream().anyMatch(v -> v.equals(value));
+		} else {
+			return false;
+		}
+	}
+	
+	public boolean hasIssn(String value) {
+		if(this.issns != null) {
+			return this.issns.stream().anyMatch(issn -> issn.getIssn().equals(value));
+		} else {
+			return false;
+		}
+	}
+	
+	public boolean hasCancelledIssn(String value) {
+		if(this.cancelledIssns != null) {
+			return this.cancelledIssns.contains(value);
+		} else {
+			return false;
+		}
+	}
 
 
 

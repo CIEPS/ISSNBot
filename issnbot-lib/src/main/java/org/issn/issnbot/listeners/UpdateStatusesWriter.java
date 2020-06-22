@@ -7,9 +7,14 @@ import org.issn.issnbot.WikidataUpdateStatus;
 
 public interface UpdateStatusesWriter {
 
-	public void success(String issnl, String qid, Map<Integer, IssnBotListener.PropertyStatus> updateStatus) throws IOException;
+	public void success(
+			String issnl,
+			String qid,
+			Map<Integer, IssnBotListener.PropertyStatus> updateStatus,
+			Map<Integer, IssnBotListener.PropertyStatus> previousValueUpdateStatuses
+	) throws IOException;
 	
-	public void error(String issnl, String qid) throws IOException;
+	public void error(String issnl, String qid, String message) throws IOException;
 	
 	public void close() throws IOException;
 }

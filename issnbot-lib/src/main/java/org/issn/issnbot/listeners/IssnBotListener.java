@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.issn.issnbot.WikidataUpdateStatus;
+import org.issn.issnbot.model.SerialEntry;
 
 public interface IssnBotListener {
 
@@ -15,11 +16,11 @@ public interface IssnBotListener {
 	
 	public void stopBatch(String batchId);
 	
-	public void startSerial(String issnl, String wikidataId);
+	public void startSerial(SerialEntry entry);
 	
-	public void successSerial(String issnl, String wikidataId, Map<Integer, PropertyStatus> statuses);
+	public void successSerial(SerialEntry entry, SerialResult result);
 	
-	public void errorSerial(String issnl, String wikidataId);
+	public void errorSerial(SerialEntry entry, String message);
 	
 	public class PropertyStatus {
 		public WikidataUpdateStatus status;

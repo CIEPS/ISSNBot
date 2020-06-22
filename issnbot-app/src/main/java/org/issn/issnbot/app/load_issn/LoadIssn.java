@@ -2,12 +2,6 @@ package org.issn.issnbot.app.load_issn;
 
 import org.issn.issnbot.IssnBot;
 import org.issn.issnbot.app.CommandIfc;
-import org.issn.issnbot.listeners.IssnBotOutputListener;
-import org.issn.issnbot.listeners.IssnBotReportListener;
-import org.issn.issnbot.providers.WikidataDistributionFormatProvider;
-import org.issn.issnbot.providers.WikidataLanguageCodesProvider;
-import org.issn.issnbot.providers.WikidataSparqlCountryIdProvider;
-import org.issn.issnbot.providers.WikidataSparqlLanguageIdProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,31 +41,10 @@ public class LoadIssn implements CommandIfc {
 		
 		try {
 			
-			log.info("Init Language IDs map...");
-			WikidataSparqlLanguageIdProvider langIdProvider = new WikidataSparqlLanguageIdProvider();
-			log.info("Init Country codes map...");
-			WikidataSparqlCountryIdProvider countryIdProvier = new WikidataSparqlCountryIdProvider();
-			log.info("Init Language codes map...");
-			WikidataLanguageCodesProvider languageCodes = new WikidataLanguageCodesProvider();
-			log.info("Init Distribution formats map...");
-			WikidataDistributionFormatProvider distributionFormats = new WikidataDistributionFormatProvider();
+			IssnBotFactory factory = new IssnBotFactory(args);
+			IssnBot bot = factory.build();
 			
 			log.info("Running IssnBot...");
-			
-			IssnBot bot = new IssnBot(
-					args.login,
-					System.getProperty("password"),
-					langIdProvider,
-					countryIdProvier,
-					languageCodes,
-					distributionFormats
-			);
-			
-			bot.getListeners().add(new IssnBotReportListener());
-			bot.getListeners().add(new IssnBotOutputListener(args.getOutput()));
-			
-			bot.setDryRun(!args.isUpdate());
-			
 			bot.processFolder(args.getInput());
 			
 			log.info("Command : "+this.getClass().getSimpleName()+" finished successfully in {} ms", (System.currentTimeMillis() - start));
