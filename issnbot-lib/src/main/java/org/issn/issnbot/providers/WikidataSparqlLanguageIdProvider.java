@@ -2,8 +2,8 @@ package org.issn.issnbot.providers;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -38,7 +38,11 @@ public class WikidataSparqlLanguageIdProvider implements WikidataIdProviderIfc {
 		Repository repo = new SPARQLRepository(WikidataIssnModel.WIKIDATA_SPARQL_ENDPOINT);
 
 		try (RepositoryConnection conn = repo.getConnection()) {
-			String queryString = "SELECT ?iso6392 ?qid WHERE { ?qid <http://www.wikidata.org/prop/direct/P"+WikidataIssnModel.ISO_639_2_PROPERTY_ID+"> ?iso6392 } ORDER BY ?iso6392";
+			String queryString = "SELECT ?iso6392 ?qid WHERE { "+"\n"
+					+ "  ?qid <http://www.wikidata.org/prop/direct/P"+WikidataIssnModel.ISO_639_2_PROPERTY_ID+"> ?iso6392 ."+"\n"
+					// restrict to languages having a wikimedia language code
+					+ "  ?qid <http://www.wikidata.org/prop/direct/P"+WikidataIssnModel.WIKIMEDIA_LANGUAGE_CODE_PROPERTY_ID+"> ?wikimediaLangCode ."+"\n"
+					+ "} ORDER BY ?iso6392";
 			TupleQuery tupleQuery = conn.prepareTupleQuery(queryString);
 			log.debug("Issuing SPARQL \n"+queryString);
 			try (TupleQueryResult result = tupleQuery.evaluate()) {
@@ -47,12 +51,20 @@ public class WikidataSparqlLanguageIdProvider implements WikidataIdProviderIfc {
 					String code = bindingSet.getValue("iso6392").stringValue();
 					String qid = bindingSet.getValue("qid").stringValue().substring(WikidataIssnModel.WIKIDATA_IRI.length());
 					log.debug("Populated language ID cache with "+code+" => "+qid);
+					
+					// double check for duplicate codes
+					// possible to get twice the same value for languages with 2 wikimedia language codes
+					if(languageIdCache.containsKey(code) && !languageIdCache.get(code).getId().equals(qid)) {
+						log.error("Found the same ISO639-2 code '"+code+"' on 2 IDs : "+languageIdCache.get(code).getId()+" and "+qid);
+					}
+					
 					this.languageIdCache.put(code, Datamodel.makeWikidataItemIdValue(qid));
 				}
 			}
 		}
 		
-		log.debug("Language ID cache contains "+this.languageIdCache.size()+" language code entries.");
+		log.debug("Language ID cache contains "+this.languageIdCache.size()+" entries.");
+		log.info("Language ID cache : \n"+this.languageIdCache.entrySet().stream().map(e -> e.getKey()+"="+e.getValue().getId()).collect(Collectors.joining("\n")));
 
 	}
 }

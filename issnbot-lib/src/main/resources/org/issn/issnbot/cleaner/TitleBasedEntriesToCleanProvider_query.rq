@@ -1,0 +1,15 @@
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+SELECT ?serial ?titleSourceIssn
+WHERE {
+  # Find anything with a title statement ...
+  ?serial p:P1476 ?titleStatement .
+  # that has a reference
+  ?titleStatement prov:wasDerivedFrom ?reference .
+  # with an ISSN and a "stated in" / "affirmé dans" that points to ISSN Register
+  ?reference pr:P236 ?titleSourceIssn .
+  ?reference pr:P248 wd:Q70460099 .
+  # And where that same ISSN does not exists as a statement on this item
+  FILTER NOT EXISTS {
+     ?serial wdt:P236 ?titleSourceIssn .  
+  }
+}

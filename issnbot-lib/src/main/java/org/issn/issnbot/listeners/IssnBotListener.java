@@ -12,15 +12,15 @@ public interface IssnBotListener {
 
 	public void stop();
 	
-	public void startBatch(String batchId);
+	public void startFile(String fileName);
 	
-	public void stopBatch(String batchId);
+	public void stopFile(String fileName);
 	
 	public void startSerial(SerialEntry entry);
 	
-	public void successSerial(SerialEntry entry, SerialResult result);
+	public void successSerial(SerialEntry entry, boolean noUpdate, SerialResult result);
 	
-	public void errorSerial(SerialEntry entry, String message);
+	public void errorSerial(SerialEntry entry, boolean apiError, String message);
 	
 	public class PropertyStatus {
 		public WikidataUpdateStatus status;

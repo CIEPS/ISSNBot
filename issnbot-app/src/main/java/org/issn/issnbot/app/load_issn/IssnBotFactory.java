@@ -35,6 +35,8 @@ public class IssnBotFactory {
 		log.info("Init Distribution formats map...");
 		WikidataDistributionFormatProvider distributionFormats = new WikidataDistributionFormatProvider();
 		
+		// output language maps in log folder
+		
 		
 		IssnBot bot = new IssnBot(
 				this.args.getLogin(),

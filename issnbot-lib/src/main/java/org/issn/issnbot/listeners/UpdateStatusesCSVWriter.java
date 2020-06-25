@@ -50,15 +50,17 @@ public class UpdateStatusesCSVWriter implements UpdateStatusesWriter {
 	}
 
 	@Override
-	public void success(			String issnl,
+	public void success(
+			String issnl,
 			String qid,
+			String code,
 			Map<Integer, IssnBotListener.PropertyStatus> updateStatuses,
 			Map<Integer, IssnBotListener.PropertyStatus> previousValueUpdateStatuses
 	) throws IOException {
 		printer.print(sdf.format(new Date()));
 		printer.print(issnl);
 		printer.print(qid);
-		printer.print("SUCCESS");
+		printer.print(code);
 		// empty message when success
 		printer.print("");
 		for (Map.Entry<Integer, IssnBotListener.PropertyStatus> aPropStatus : updateStatuses.entrySet()) {
@@ -71,11 +73,11 @@ public class UpdateStatusesCSVWriter implements UpdateStatusesWriter {
 	}
 	
 	@Override
-	public void error(String issnl, String qid, String message) throws IOException {
+	public void error(String issnl, String qid, boolean apiError, String message) throws IOException {
 		printer.print(sdf.format(new Date()));
 		printer.print(issnl);
 		printer.print(qid);
-		printer.print("ERROR");
+		printer.print(apiError?"ERROR API":"ERROR DATA");
 		printer.print(message);
 		printer.println();
 	}

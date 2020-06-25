@@ -3,13 +3,15 @@ package org.issn.issnbot;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -17,7 +19,6 @@ import org.issn.issnbot.listeners.IssnBotListener;
 import org.issn.issnbot.listeners.IssnBotReportListener;
 import org.issn.issnbot.model.IssnValue;
 import org.issn.issnbot.model.SerialEntry;
-import org.issn.issnbot.model.SerialEntry.ValuesWithReference;
 import org.issn.issnbot.model.WikidataIssnModel;
 import org.issn.issnbot.providers.WikidataDistributionFormatProvider;
 import org.issn.issnbot.providers.WikidataIdProviderIfc;
@@ -35,45 +36,33 @@ import org.wikidata.wdtk.datamodel.interfaces.EntityDocument;
 import org.wikidata.wdtk.datamodel.interfaces.ItemDocument;
 import org.wikidata.wdtk.datamodel.interfaces.ItemIdValue;
 import org.wikidata.wdtk.datamodel.interfaces.MonolingualTextValue;
-import org.wikidata.wdtk.datamodel.interfaces.PropertyIdValue;
 import org.wikidata.wdtk.datamodel.interfaces.Statement;
-import org.wikidata.wdtk.util.WebResourceFetcherImpl;
-import org.wikidata.wdtk.wikibaseapi.BasicApiConnection;
-import org.wikidata.wdtk.wikibaseapi.LoginFailedException;
-import org.wikidata.wdtk.wikibaseapi.WikibaseDataEditor;
-import org.wikidata.wdtk.wikibaseapi.WikibaseDataFetcher;
 import org.wikidata.wdtk.wikibaseapi.apierrors.MediaWikiApiErrorException;
 
-public class IssnBot {
+public class IssnBot extends AbstractWikidataBot {
 
 	private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
 
+	public static final SimpleDateFormat MESSAGE_DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss");
 	public static final String AGENT_NAME = "ISSN Bot";
-
-	private WikibaseDataEditor wbde;
-	private WikibaseDataFetcher wbdf;
-
-	private String batchIdentifier;
 
 	private String editSummary = null;
 
-	private boolean dryRun = true;
+	
 
-	private String login;
-	private String password;
 	private WikidataIdProviderIfc languageIdProvider;
 	private WikidataIdProviderIfc countryIdProvider;
 	private WikidataLanguageCodesProvider languageCodes;
 	private WikidataIdProviderIfc formatsIdProvider;
-	
-	private Integer wikidata_maxLag = null;
-	private Integer wikidata_maxLagMaxRetries = null;
-	private Double  wikidata_maxLagBackoffFactor = null;
-	private Integer wikidata_maxLagFirstWaitTime = null;
 
 	private List<IssnBotListener> listeners = new ArrayList<IssnBotListener>();
 
 	private int limit = -1;	
+	
+	private transient Date runDate;
+	private transient String currentFileName;
+	private transient String batchIdentifier;
+	
 	private transient int serialsProcessed = 0;
 	
 	private transient Map<String, EntityDocument> readAheadCache = new HashMap<>();
@@ -89,68 +78,41 @@ public class IssnBot {
 			WikidataIdProviderIfc formatsIdProvider
 	) {
 
-		this.login = login;
-		this.password = password;
+		super(AGENT_NAME, login, password);
+		
 		this.languageIdProvider = languageIdProvider;
 		this.countryIdProvider = countryIdProvider;
 		this.languageCodes = languageCodes;
 		this.formatsIdProvider = formatsIdProvider;
 	}
-	
-	public void initConnection() throws LoginFailedException {
-		// Always set your User-Agent to the name of your application:
-		WebResourceFetcherImpl.setUserAgent(AGENT_NAME);
-
-		BasicApiConnection connection = BasicApiConnection.getWikidataApiConnection();
-		// Login -- required for operations on real wikis:
-		connection.login(login, password);
-
-		this.wbde = new WikibaseDataEditor(connection, WikidataIssnModel.WIKIDATA_IRI);
-		this.wbde.setEditAsBot(true);
-		if(this.wikidata_maxLag != null) {
-			this.wbde.setMaxLag(this.wikidata_maxLag);
-		}
-		if(this.wikidata_maxLagFirstWaitTime != null) {
-			this.wbde.setMaxLagFirstWaitTime(this.wikidata_maxLagFirstWaitTime);
-		}
-		if(this.wikidata_maxLagBackoffFactor != null) {
-			this.wbde.setMaxLagBackOffFactor(this.wikidata_maxLagBackoffFactor);
-		}
-		if(this.wikidata_maxLagMaxRetries != null) {
-			this.wbde.setMaxLagMaxRetries(this.wikidata_maxLagMaxRetries);
-		}
-		log.info("Wikidata connection parameters : maxLag="+this.wbde.getMaxLag()+" seconds, firstWaitTime="+this.wbde.getMaxLagFirstWaitTime()+", backoffFactor="+this.wbde.getMaxLagBackOffFactor()+", maxRetries="+this.wbde.getMaxLagMaxRetries());
-
-		this.wbdf = new WikibaseDataFetcher(connection, Datamodel.SITE_WIKIDATA);
-		// we don't care about site links
-		this.wbdf.getFilter().setSiteLinkFilter(new HashSet<String>());
-		this.wbdf.getFilter().setPropertyFilter(new HashSet<PropertyIdValue>(Arrays.asList(new PropertyIdValue[] {
-				WikidataIssnModel.toWikidataProperty(WikidataIssnModel.ISSN_PROPERTY_ID),
-				WikidataIssnModel.toWikidataProperty(WikidataIssnModel.TITLE_PROPERTY_ID),
-				WikidataIssnModel.toWikidataProperty(WikidataIssnModel.ISSNL_PROPERTY_ID),
-				WikidataIssnModel.toWikidataProperty(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID),
-				WikidataIssnModel.toWikidataProperty(WikidataIssnModel.OFFICIAL_WEBSITE_PROPERTY_ID),
-				WikidataIssnModel.toWikidataProperty(WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID)
-		})));
-	}
 
 	public void initBatch(String batchId) {
 		// init a batch identifier
 		// String batchId = Long.toString((new Random()).nextLong(), 16).replace("-", "");
-		this.batchIdentifier = "([[:toollabs:editgroups/b/CB/" + batchId + "|details]])";
+		this.batchIdentifier = "([[:toollabs:editgroups/b/ISSNBot/" + batchId + "|details]])";
 		log.info("Initialized batch identifier to : "+this.batchIdentifier);
 	}
 
 
 	public void processFolder(File inputFolder) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 
+		// save the date at which bot runs
+		this.runDate = new Date();
+		
 		// notify start
 		listeners.forEach(l -> l.start(inputFolder));
 
 		// recurse in subdirs
-		for (File anInputFile : FileUtils.listFiles(inputFolder, new String[] {"csv", "xls", "tsv"}, true)) {
+		for (File anInputFile : FileUtils.listFiles(inputFolder, new String[] {"csv", "xls", "tsv"}, true)) {			
+			// assign batch ID - each processed file got its own batch ID
+			String batchId = Long.toString((new Random()).nextLong(), 16).replace("-", "");
+			// keep track of current file name to put in edit messages
+			this.currentFileName = anInputFile.getName();
+			// init CSV reader
 			SerialEntryReader reader = new CSVSerialEntryReader(new FileInputStream(anInputFile));
-			this.process(reader, anInputFile.getName());
+			// process the file
+			this.process(reader, anInputFile.getName(), batchId);
+			// if we have reached the limit, stop
 			if(limit > 0 && serialsProcessed == limit) {
 				break;
 			}
@@ -164,14 +126,14 @@ public class IssnBot {
 		this.readAheadCache = wbdf.getEntityDocuments(entityIds);
 	}
 
-	public void process(SerialEntryReader reader, String id) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
+	public void process(SerialEntryReader reader, String filename, String batchId) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 
 		// notify start batch
-		listeners.stream().forEach(l -> l.startBatch(id));
+		listeners.stream().forEach(l -> l.startFile(filename));
 
-		this.initBatch(id);
+		this.initBatch(batchId);
 		List<SerialEntry> entries = reader.read();
-		log.debug("Processing "+entries.size()+" entries in batch ID "+id);
+		log.debug("Processing "+entries.size()+" entries in batch ID "+batchId);
 		if(this.dryRun) {
 			log.debug("Operating in dry run, no real updates will take place in Wikidata");
 		} else {
@@ -202,7 +164,7 @@ public class IssnBot {
 		}
 
 		// notify end batch
-		listeners.stream().forEach(l -> l.stopBatch(id));
+		listeners.stream().forEach(l -> l.stopFile(filename));
 	}
 	
 	public void processBatch(List<SerialEntry> currentBatch) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
@@ -213,7 +175,7 @@ public class IssnBot {
 		
 	}
 
-	public void processSerial(SerialEntry entry) throws IOException, MediaWikiApiErrorException {
+	public void processSerial(SerialEntry entry) {
 		log.debug("Processing row "+entry.getRecordNumber()+" : "+entry.getIssnL());
 
 		// notify serial
@@ -228,7 +190,7 @@ public class IssnBot {
 			
 			// check availability of language code
 			if(this.languageCodes.getWikimediaCode(entry.getLang().getValue()) == null) {
-				throw new IssnBotException(entry.getIssnL()+" - Language code "+entry.getLang().getValue()+" is not an iso6392 code associated to a Wikimedia code in Wikidata, or mul or mis.");
+				throw new IssnBotException(entry.getIssnL()+" - Language code "+entry.getLang().getValue()+" is not an iso6392 code associated to a Wikimedia code in Wikidata.");
 			}
 			
 			// Fetch the entity data from Wikidata : this was read in the readAhead cache
@@ -250,6 +212,7 @@ public class IssnBot {
 			// synchronize Label and Aliases
 			List<MonolingualTextValue> addLabels = wikidataSerial.getLabelsToAdd(entry);
 			List<MonolingualTextValue> addAliases = wikidataSerial.getAliasesToAdd(entry, !addLabels.isEmpty());
+			
 			
 			// process title statement
 			wikidataSerial.updateTitle(entry).ifPresent(statementsToAdd::add);
@@ -276,98 +239,73 @@ public class IssnBot {
 			// compute statements to delete, if necessary
 			wikidataSerial.getUnknownCancelledIssnStatementsToDelete(entry).stream().forEach(statementsToDelete::add);
 			
-			// create the ISSN statements
-			//		entry.getIssns().stream().forEach(value -> {
-			//			// the main value with the ISSN String
-			//			Statement s = StatementBuilder
-			//					.forSubjectAndProperty(entityId, WikidataIssnModel.toWikidataProperty(WikidataIssnModel.ISSN_PROPERTY_ID))
-			//					.withValue(Datamodel.makeStringValue(value.getIssn()))
-			//					// key title qualifier
-			//					.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.NAMED_AS_PROPERTY_ID), Datamodel.makeStringValue(value.getKeyTitle()))
-			//					// distribution format qualifier
-			//					.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.DISTRIBUTION_FORMAT_PROPERTY_ID), value.getDistributionFormat())
-			//					.build();
-			//
-			//			statementsToAdd.add(s);
-			//		});
-
-
-
-			// create the labels
-			// entry.getLabelsPerLanguageCode().entrySet().stream().forEach(label -> {
-			//	builder.withLabel(label.getValue(), label.getKey());
-			//	// .withLabel("Wikidata Toolkit test", "en")
-			// });
-
-			// ItemDocument itemDocument = builder.build();
-
-
-			if(!this.dryRun ) {
-				log.debug("Calling API to update "+entry.getWikidataId()+"...");
-				log.debug("Added Statements "+statementsToAdd.toString()+"...");
 				
-				String currentEditSummary = (this.editSummary != null)?this.editSummary:AGENT_NAME+" synchronizing ISSN-L "+entry.getIssnL();
+			// if nothing to do, don't do anything
+			if(
+					addLabels.isEmpty()
+					&&
+					addAliases.isEmpty()
+					&&
+					statementsToAdd.isEmpty()
+					&&
+					statementsToDelete.isEmpty()
+			) {
+				// notify untouched
+				log.debug("No modification to do, don't call API.");
+				listeners.stream().forEach(l -> l.successSerial(entry, true, wikidataSerial.getResult()));
+			} else {
 				
-				ItemDocument newItemDocument = wbde.updateTermsStatements(
-						entityId,
-						// addLabels,
-						addLabels,
-						// addDescriptions,
-						Collections.emptyList(),
-						// addAliases,
-						addAliases,
-						// deleteAliases
-						Collections.emptyList(),
-						// statements to add
-						statementsToAdd,
-						// statements to delete						
-						statementsToDelete,
-						// summary
-						currentEditSummary+" | "+this.batchIdentifier,
-						// tags
-						Collections.emptyList()
-				);
-				
-				// to create document
-				// ItemDocument newItemDocument = wbde.createItemDocument(itemDocument,"ISSN import test. See https://www.wikidata.org/wiki/Wikidata_talk:WikiProject_Periodicals#Data_donation_from_ISSN_Register_-_Feedback_welcome", Collections.emptyList());
+				if(!this.dryRun ) {
+					log.debug("Calling API to update "+entry.getWikidataId()+"...");
+					log.debug("Added Statements "+statementsToAdd.toString()+"...");
 					
-//				wbde.editItemDocument(
-//						newID,
-//						// clear : yes / no
-//						false,
-//						(this.editSummary != null)?this.editSummary+" | "+this.batchIdentifier:this.batchIdentifier,
-//								Collections.emptyList()
-//				);
+					String currentEditSummary = (this.editSummary != null)?this.editSummary:AGENT_NAME+" synch ISSN-L "+entry.getIssnL()+" from "+this.currentFileName+" at "+MESSAGE_DATE_FORMAT.format(this.runDate);
+					
+					try {
+						ItemDocument newItemDocument = wbde.updateTermsStatements(
+								entityId,
+								// addLabels,
+								addLabels,
+								// addDescriptions,
+								Collections.emptyList(),
+								// addAliases,
+								addAliases,
+								// deleteAliases
+								Collections.emptyList(),
+								// statements to add
+								statementsToAdd,
+								// statements to delete						
+								statementsToDelete,
+								// summary
+								currentEditSummary+" | "+this.batchIdentifier,
+								// tags
+								Collections.emptyList()
+						);
+					} catch (Exception e) {
+						log.error(e.getMessage(),e);			
+						// notify error
+						listeners.stream().forEach(l -> l.errorSerial(entry, true, e.getMessage()));
+						return;
+					}
+					
+					log.debug("API called successfully");
 				
-				log.debug("API called successfully");
+				}
+				
+				// notify success
+				listeners.stream().forEach(l -> l.successSerial(entry, false, wikidataSerial.getResult()));
 			}
-			
-			// NOTE : there is no merging of statements here, if the ISSN already exists but with no qualifiers, new statements are created
-			// the existing statements should be updated
-
-			//		ItemDocument newItemDocument = wbde.updateStatements(
-			//				entityId,
-			//				// statements to add
-			//				statementsToAdd,
-			//				// statements to delete
-			//				Collections.emptyList(),
-			//				// summary
-			//				(this.editSummary != null)?this.editSummary+" | "+this.batchIdentifier:this.batchIdentifier,
-			//				// tags
-			//				Collections.emptyList()
-			//		);
-			//		System.out.println(newItemDocument);
-
-			// notify success
-			listeners.stream().forEach(l -> l.successSerial(entry, wikidataSerial.getResult()));
 
 		} catch(Exception e) {
 			log.error(e.getMessage(),e);			
 			// notify error
-			listeners.stream().forEach(l -> l.errorSerial(entry, e.getMessage()));
+			listeners.stream().forEach(l -> l.errorSerial(entry, false, e.getMessage()));
 		}
 
 	}
+	
+
+
 
 	public String getEditSummary() {
 		return editSummary;
@@ -381,48 +319,8 @@ public class IssnBot {
 		return batchIdentifier;
 	}
 
-	public boolean isDryRun() {
-		return dryRun;
-	}
-
-	public void setDryRun(boolean dryRun) {
-		this.dryRun = dryRun;
-	}
-
 	public List<IssnBotListener> getListeners() {
 		return listeners;
-	}
-
-	public Integer getWikidata_maxLag() {
-		return wikidata_maxLag;
-	}
-
-	public void setWikidata_maxLag(Integer wikidata_maxLag) {
-		this.wikidata_maxLag = wikidata_maxLag;
-	}
-
-	public Integer getWikidata_maxLagMaxRetries() {
-		return wikidata_maxLagMaxRetries;
-	}
-
-	public void setWikidata_maxLagMaxRetries(Integer wikidata_maxLagMaxRetries) {
-		this.wikidata_maxLagMaxRetries = wikidata_maxLagMaxRetries;
-	}
-
-	public Double getWikidata_maxLagBackoffFactor() {
-		return wikidata_maxLagBackoffFactor;
-	}
-
-	public void setWikidata_maxLagBackoffFactor(Double wikidata_maxLagBackoffFactor) {
-		this.wikidata_maxLagBackoffFactor = wikidata_maxLagBackoffFactor;
-	}
-
-	public Integer getWikidata_maxLagFirstWaitTime() {
-		return wikidata_maxLagFirstWaitTime;
-	}
-
-	public void setWikidata_maxLagFirstWaitTime(Integer wikidata_maxLagFirstWaitTime) {
-		this.wikidata_maxLagFirstWaitTime = wikidata_maxLagFirstWaitTime;
 	}
 
 	public int getLimit() {

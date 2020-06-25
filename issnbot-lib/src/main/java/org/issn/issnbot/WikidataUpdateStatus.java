@@ -20,6 +20,8 @@ public enum WikidataUpdateStatus {
 		EMPTY(8),
 		// Indicate mixed updates in case of multiple values (e.g. offcial websites)
 		MIXED(10),
+		// Indicate a plain ISSN in Wikidata was actually cancelled and marked as such
+		SET_DEPRECATED(11),
 		
 		// Indicate that old values were deprecated
 		PREVIOUS_VALUE_DEPRECATED(100),

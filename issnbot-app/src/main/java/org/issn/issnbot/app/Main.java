@@ -1,5 +1,7 @@
 package org.issn.issnbot.app;
 
+import org.issn.issnbot.app.clean_serials.ArgumentsCleanSerials;
+import org.issn.issnbot.app.clean_serials.CleanSerials;
 import org.issn.issnbot.app.load_issn.ArgumentsLoadIssn;
 import org.issn.issnbot.app.load_issn.LoadIssn;
 import org.issn.issnbot.app.version.ArgumentsVersion;
@@ -16,6 +18,7 @@ public class Main {
 	enum COMMAND {		
 		
 		LOAD_ISSN(new ArgumentsLoadIssn(), new LoadIssn()),
+		CLEAN_SERIALS(new ArgumentsCleanSerials(), new CleanSerials()),
 		VERSION(new ArgumentsVersion(), new Version()),
 		;
 		

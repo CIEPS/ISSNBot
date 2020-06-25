@@ -496,6 +496,14 @@ public class WikidataSerial {
 							.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.REASON_FOR_DEPRECATION_PROPERTY_ID), WikidataIssnModel.INCORRECT_IDENTIFER_VALUE)
 							.withRank(StatementRank.DEPRECATED);
 
+				} else if(serialItem.findIssnStatement(aCancelledIssn).isPresent()) {
+					// find plain ISSN statements that are actually cancelled, in that case deprecate them
+					log.debug(serial.getIssnL()+" - Cancelled ISSN : SET DEPRECATED");
+					statuses.add(WikidataUpdateStatus.SET_DEPRECATED);
+					
+					sb = copy(serialItem.findIssnStatement(aCancelledIssn).get())
+							.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.REASON_FOR_DEPRECATION_PROPERTY_ID), WikidataIssnModel.INCORRECT_IDENTIFER_VALUE)
+							.withRank(StatementRank.DEPRECATED);
 				} else {
 					log.debug(serial.getIssnL()+" - Cancelled ISSN : NOTHING");
 					statuses.add(WikidataUpdateStatus.NOTHING);
@@ -555,7 +563,7 @@ public class WikidataSerial {
 		String wikimediaLangCode = this.languageCodes.getWikimediaCode(serial.getLang().getValue());
 		
 		// mis and mul are not available for labels/aliases, just skip in this case
-		if(wikimediaLangCode.equals("mis") || wikimediaLangCode.equals("mul")) {
+		if(wikimediaLangCode.equals("mis") || wikimediaLangCode.equals("mul") || wikimediaLangCode.equals("und")) {
 			log.debug(serial.getIssnL()+" - Label : NOTHING");
 			notify(WikidataIssnModel.FAKE_LABEL_PROPERTY_ID, WikidataUpdateStatus.NOTHING);
 			return Collections.emptyList();
@@ -585,7 +593,7 @@ public class WikidataSerial {
 		String wikimediaLangCode = this.languageCodes.getWikimediaCode(serial.getLang().getValue());
 		
 		// mis and mul are not available for labels/aliases, just skip in this case
-		if(wikimediaLangCode.equals("mis") || wikimediaLangCode.equals("mul")) {
+		if(wikimediaLangCode.equals("mis") || wikimediaLangCode.equals("mul") || wikimediaLangCode.equals("und")) {
 			log.debug(serial.getIssnL()+" - Alias : NOTHING");
 			notify(WikidataIssnModel.FAKE_ALIAS_PROPERTY_ID, WikidataUpdateStatus.NOTHING);
 			return Collections.emptyList();

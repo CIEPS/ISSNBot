@@ -18,7 +18,8 @@ public class IssnBotOutputListener implements IssnBotListener {
 	protected File errorDirectory;
 	protected UpdateStatusesCSVWriter updateWriter;
 	
-	protected Writer errorWriter;
+	protected Writer dataErrorWriter;
+	protected Writer apiErrorWriter;
 	
 	public IssnBotOutputListener(File outputDirectory, File errorDirectory) {
 		super();
@@ -37,18 +38,22 @@ public class IssnBotOutputListener implements IssnBotListener {
 	}
 
 	@Override
-	public void startBatch(String batchId) throws RuntimeException {
+	public void startFile(String fileName) throws RuntimeException {
 		// nothing
 		try {
-			File outputFile = new File(this.outputDirectory, batchId+"_output.csv");
+			File outputFile = new File(this.outputDirectory, fileName+"_output.csv");
 			FileOutputStream os = new FileOutputStream(outputFile);
 			OutputStreamWriter writer = new OutputStreamWriter(os);
 			
 			this.updateWriter = new UpdateStatusesCSVWriter(writer);
 			
-			File errorFile = new File(this.errorDirectory, batchId+"_error.csv");
-			FileOutputStream errorOs = new FileOutputStream(errorFile);
-			this.errorWriter = new OutputStreamWriter(errorOs);
+			File dataErrorFile = new File(this.errorDirectory, fileName+"_error_data.csv");
+			FileOutputStream dataErrorOs = new FileOutputStream(dataErrorFile);
+			this.dataErrorWriter = new OutputStreamWriter(dataErrorOs);
+			
+			File apiErrorFile = new File(this.errorDirectory, fileName+"_error_api.csv");
+			FileOutputStream apiErrorOs = new FileOutputStream(apiErrorFile);
+			this.apiErrorWriter = new OutputStreamWriter(apiErrorOs);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -56,10 +61,11 @@ public class IssnBotOutputListener implements IssnBotListener {
 	}
 
 	@Override
-	public void stopBatch(String batchId) {
+	public void stopFile(String fileName) {
 		try {
 			this.updateWriter.close();
-			this.errorWriter.close();
+			this.apiErrorWriter.close();
+			this.dataErrorWriter.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -71,20 +77,25 @@ public class IssnBotOutputListener implements IssnBotListener {
 	}
 
 	@Override
-	public void successSerial(SerialEntry entry, SerialResult result) {
+	public void successSerial(SerialEntry entry, boolean noUpdate, SerialResult result) {
 		try {
-			this.updateWriter.success(entry.getIssnL(), entry.getWikidataId(), result.getStatuses(), result.getPreviousValuesStatuses());
+			this.updateWriter.success(entry.getIssnL(), entry.getWikidataId(), noUpdate?"UNTOUCHED":"SUCCESS", result.getStatuses(), result.getPreviousValuesStatuses());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	@Override
-	public void errorSerial(SerialEntry entry, String message) {
+	public void errorSerial(SerialEntry entry, boolean apiError, String message) {
 		try {
-			this.updateWriter.error(entry.getIssnL(), entry.getWikidataId(), message);
-			this.errorWriter.write(entry.getRecord());
-			this.errorWriter.flush();
+			this.updateWriter.error(entry.getIssnL(), entry.getWikidataId(), apiError, message);
+			if(apiError) {
+				this.apiErrorWriter.write(entry.getRecord());
+				this.apiErrorWriter.flush();
+			} else {
+				this.dataErrorWriter.write(entry.getRecord());
+				this.dataErrorWriter.flush();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

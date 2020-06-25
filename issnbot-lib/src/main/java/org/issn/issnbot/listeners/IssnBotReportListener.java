@@ -22,9 +22,11 @@ public class IssnBotReportListener implements IssnBotListener {
 	private Date endTime;
 	private long nbFilesInput;
 	private long nbSerialsInput;
-	protected long nbBatches = 0;
+	protected long nbFiles = 0;
 	protected long nbSuccess = 0;
-	protected long nbErrors = 0;
+	protected long nbUntouched = 0;
+	protected long nbDataErrors = 0;
+	protected long nbApiErrors = 0;
 	
 	protected Map<WikidataUpdateStatus, Long> countByStatuses = new HashMap<>();
 	
@@ -52,13 +54,13 @@ public class IssnBotReportListener implements IssnBotListener {
 	}
 
 	@Override
-	public void startBatch(String batchId) {
+	public void startFile(String fileName) {
 		// nothing
 	}
 
 	@Override
-	public void stopBatch(String batchId) {
-		nbBatches++;
+	public void stopFile(String fileName) {
+		nbFiles++;
 	}
 
 	@Override
@@ -67,8 +69,12 @@ public class IssnBotReportListener implements IssnBotListener {
 	}
 
 	@Override
-	public void successSerial(SerialEntry entry, SerialResult result) {
-		nbSuccess++;
+	public void successSerial(SerialEntry entry, boolean noUpdate, SerialResult result) {
+		if(noUpdate) {
+			nbUntouched++;
+		} else {
+			nbSuccess++;
+		}
 		
 		// populate status map
 		for (Map.Entry<Integer, IssnBotListener.PropertyStatus> anEntry : result.getStatuses().entrySet()) {
@@ -91,8 +97,12 @@ public class IssnBotReportListener implements IssnBotListener {
 	}
 
 	@Override
-	public void errorSerial(SerialEntry entry, String message) {
-		nbErrors++;
+	public void errorSerial(SerialEntry entry, boolean apiError, String message) {
+		if (apiError) {
+			this.nbApiErrors++;
+		} else {
+			this.nbDataErrors++;
+		}
 		this.serialsInError.add(entry.getIssnL()+" / "+entry.getWikidataId());
 	}
 	
@@ -106,8 +116,10 @@ public class IssnBotReportListener implements IssnBotListener {
 		sb.append("--- ISSN Bot Report ---"+"\n");
 		sb.append("- Number of files to process: "+this.nbFilesInput+"\n");
 		sb.append("- Number of serials processed: "+this.nbSerialsInput+"\n");
-		sb.append("- Number of serials in ERROR  : "+this.nbErrors+"\n");
-		sb.append("- Number of serials in success: "+this.nbSuccess+"\n");
+		sb.append("- Number of serials with API ERROR  : "+this.nbApiErrors+"\n");
+		sb.append("- Number of serials with DATA ERROR  : "+this.nbDataErrors+"\n");
+		sb.append("- Number of serials updated: "+this.nbSuccess+"\n");
+		sb.append("- Number of serials untouched: "+this.nbUntouched+"\n");
 		sb.append("\n");
 		for (Map.Entry<Integer, Long> anEntry : this.creationByProperties.entrySet()) {
 			if(anEntry.getKey().equals(WikidataIssnModel.FAKE_LABEL_PROPERTY_ID)) {

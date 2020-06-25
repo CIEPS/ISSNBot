@@ -1,0 +1,10 @@
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+SELECT DISTINCT ?qid ?country
+WHERE {
+  ?qid wdt:P236 ?issn .
+  OPTIONAL { ?qid wdt:P17 ?country1 . }
+  OPTIONAL { ?qid wdt:P495 ?country2 . }
+  OPTIONAL { ?qid wdt:P291/wdt:P17 ?country3 . }
+  BIND(COALESCE(?country1, ?country2, ?country3) AS ?country)
+  FILTER(bound(?country))
+}
