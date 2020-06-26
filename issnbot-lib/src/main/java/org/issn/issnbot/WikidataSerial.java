@@ -3,6 +3,7 @@ package org.issn.issnbot;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -35,9 +36,9 @@ public class WikidataSerial {
 	
 	private SerialResult result = new SerialResult();
 
-	private WikidataLanguageCodesProvider languageCodes;
+	private Map<String, String> languageCodes;
 	
-	public WikidataSerial(EntityDocument entityDocument, WikidataLanguageCodesProvider languageCodes) {
+	public WikidataSerial(EntityDocument entityDocument, Map<String, String> languageCodes) {
 		super();
 		this.serialItem = new SerialItemDocument(entityDocument);
 		this.languageCodes = languageCodes;
@@ -52,7 +53,7 @@ public class WikidataSerial {
 		String referenceIssn = serial.getTitle().getReference();
 		
 		// availability of language code was checked before
-		String wikimediaLangCode = this.languageCodes.getWikimediaCode(langCode);
+		String wikimediaLangCode = this.languageCodes.get(langCode);
 		
 		// find existing title statement
 		Optional<Statement> existingStatement = serialItem.findTitleStatement(serial.getTitle().getValue(), wikimediaLangCode);
@@ -111,7 +112,7 @@ public class WikidataSerial {
 		}
 		
 		// availability of language code was checked before
-		String wikimediaLangCode = this.languageCodes.getWikimediaCode(langCode);
+		String wikimediaLangCode = this.languageCodes.get(langCode);
 		
 		// find existing statement
 		Optional<Statement> existingStatement = serialItem.findTitleStatement(serial.getTitle().getValue(), wikimediaLangCode);
@@ -560,7 +561,7 @@ public class WikidataSerial {
 	throws IssnBotException {
 
 		// availability of language code was checked before
-		String wikimediaLangCode = this.languageCodes.getWikimediaCode(serial.getLang().getValue());
+		String wikimediaLangCode = this.languageCodes.get(serial.getLang().getValue());
 		
 		// mis and mul are not available for labels/aliases, just skip in this case
 		if(wikimediaLangCode.equals("mis") || wikimediaLangCode.equals("mul") || wikimediaLangCode.equals("und")) {
@@ -590,7 +591,7 @@ public class WikidataSerial {
 	public List<MonolingualTextValue> getAliasesToAdd(SerialEntry serial, boolean alreadyAddedLabel) {
 		
 		// availability of language code was checked before
-		String wikimediaLangCode = this.languageCodes.getWikimediaCode(serial.getLang().getValue());
+		String wikimediaLangCode = this.languageCodes.get(serial.getLang().getValue());
 		
 		// mis and mul are not available for labels/aliases, just skip in this case
 		if(wikimediaLangCode.equals("mis") || wikimediaLangCode.equals("mul") || wikimediaLangCode.equals("und")) {

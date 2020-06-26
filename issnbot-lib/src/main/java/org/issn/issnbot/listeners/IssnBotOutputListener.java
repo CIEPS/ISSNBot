@@ -5,8 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
+import org.apache.commons.csv.CSVRecord;
 import org.issn.issnbot.model.SerialEntry;
+import org.issn.issnbot.read.CSVSerialEntryReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +24,8 @@ public class IssnBotOutputListener implements IssnBotListener {
 	
 	protected Writer dataErrorWriter;
 	protected Writer apiErrorWriter;
+	
+	protected transient boolean wroteApiErroWriterHeaderLine = false;
 	
 	public IssnBotOutputListener(File outputDirectory, File errorDirectory) {
 		super();
@@ -90,6 +96,9 @@ public class IssnBotOutputListener implements IssnBotListener {
 		try {
 			this.updateWriter.error(entry.getIssnL(), entry.getWikidataId(), apiError, message);
 			if(apiError) {
+				if(!wroteApiErroWriterHeaderLine) {
+					this.writeApiErrorWriterErrorLine();
+				}
 				this.apiErrorWriter.write(entry.getRecord());
 				this.apiErrorWriter.flush();
 			} else {
@@ -100,4 +109,11 @@ public class IssnBotOutputListener implements IssnBotListener {
 			e.printStackTrace();
 		}
 	}
+	
+	protected void writeApiErrorWriterErrorLine() throws IOException {
+		this.apiErrorWriter.write(Arrays.asList(CSVSerialEntryReader.COLUMN.values()).stream().map(v -> v.getHeader()).collect(Collectors.joining(",")));
+		this.apiErrorWriter.flush();
+		wroteApiErroWriterHeaderLine = true;
+	}
+	
 }

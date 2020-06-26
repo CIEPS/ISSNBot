@@ -23,31 +23,36 @@ public class CSVSerialEntryReader implements SerialEntryReader {
 
 	private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
 	
-	enum COLUMN {		
+	/*
+	 * ISSN -L	Wiki-ID	Label (titre)	ISSN ref titre	Code ISO de langue	ISSN ref langue	ISO pays	ISSN ref pays	URLs	
+	 * ISSN ref URLs	ISSN1	keytitle1	format1	ISSN2	keytitle2	format2	ISSN3	keytitle3	format3	ISSN4	keytitle4	format4	cancelled ISSN
+
+	 */
+	public enum COLUMN {		
 		
 		ISSN_L(0, "ISSN-L"),
-		WIKIDATA_QID(1, "Wikidata-QID"),
-		TITLE(2, "Title"),
-		TITLE_REF_ISSN(3, "Title Ref ISSN"),
-		LANG(4, "Language Code"),
-		LANG_REF_ISSN(5, "Language Ref ISSN"),
-		COUNTRY(6, "Country code"),
-		COUNTRY_REF_ISSN(7, "Country Ref Issn"),
+		WIKIDATA_QID(1, "Wiki-ID"),
+		TITLE(2, "Label (titre)"),
+		TITLE_REF_ISSN(3, "ISSN ref titre"),
+		LANG(4, "Code ISO de langue"),
+		LANG_REF_ISSN(5, "ISSN ref langue"),
+		COUNTRY(6, "ISO pays"),
+		COUNTRY_REF_ISSN(7, "ISSN ref pays"),
 		URLS(8, "URLs"),
-		URLS_REF_ISSN(9, "URLs Ref ISSN"),
-		ISSN_1(10, "ISSN 1"),
-		ISSN_1_KEY_TITLE(11, "ISSN 1 Key Title"),
-		ISSN_1_FORMAT(12, "ISSN 1 Format"),
-		ISSN_2(13, "ISSN 2"),
-		ISSN_2_KEY_TITLE(14, "ISSN 2 Key Title"),
-		ISSN_2_FORMAT(15, "ISSN 2 Format"),
-		ISSN_3(16, "ISSN 3"),
-		ISSN_3_KEY_TITLE(17, "ISSN 3 Key Title"),
-		ISSN_3_FORMAT(18, "ISSN 3 Format"),
-		ISSN_4(19, "ISSN 4"),
-		ISSN_4_KEY_TITLE(20, "ISSN 4 Key Title"),
-		ISSN_4_FORMAT(21, "ISSN 4 Format"),
-		CANCELLED_ISSNS(22, "Cancelled ISSNs"),
+		URLS_REF_ISSN(9, "ISSN ref URLs"),
+		ISSN_1(10, "ISSN1"),
+		ISSN_1_KEY_TITLE(11, "keytitle1"),
+		ISSN_1_FORMAT(12, "format1"),
+		ISSN_2(13, "ISSN2"),
+		ISSN_2_KEY_TITLE(14, "keytitle2"),
+		ISSN_2_FORMAT(15, "format2"),
+		ISSN_3(16, "ISSN3"),
+		ISSN_3_KEY_TITLE(17, "keytitle3"),
+		ISSN_3_FORMAT(18, "format3"),
+		ISSN_4(19, "ISSN4"),
+		ISSN_4_KEY_TITLE(20, "keytitle4"),
+		ISSN_4_FORMAT(21, "format4"),
+		CANCELLED_ISSNS(22, "cancelled ISSN"),
 		;
 		
 		private int index;
@@ -60,6 +65,10 @@ public class CSVSerialEntryReader implements SerialEntryReader {
 
 		public int getIndex() {
 			return index;
+		}
+		
+		public String getHeader() {
+			return header;
 		}
 	
 	}

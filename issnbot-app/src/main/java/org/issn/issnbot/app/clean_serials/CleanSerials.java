@@ -40,6 +40,14 @@ public class CleanSerials implements CommandIfc {
 			bot.setDryRun(!args.isUpdate());
 			bot.initConnection();
 			
+			if(args.getBatchId() != null) {
+				bot.setBatchId(args.getBatchId());
+			}
+			
+			if(args.getPauseBetweenEdits() != null) {
+				bot.setPauseBetweenEdits(args.getPauseBetweenEdits());
+			}
+			
 			// run cleaning
 			bot.clean(new TitleBasedEntriesToCleanProvider());
 			

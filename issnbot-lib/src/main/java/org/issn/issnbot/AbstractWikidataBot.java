@@ -27,11 +27,14 @@ public class AbstractWikidataBot {
 	protected Integer wikidata_maxLagMaxRetries = null;
 	protected Double  wikidata_maxLagBackoffFactor = null;
 	protected Integer wikidata_maxLagFirstWaitTime = null;
+	protected Integer pauseBetweenEdits = -1;
 	
 	protected transient WikibaseDataEditor wbde;
 	protected transient WikibaseDataFetcher wbdf;
 	
 	protected boolean dryRun = true;
+	
+	protected String batchId;
 	
 	public AbstractWikidataBot(String agentName, String login, String password) {
 		super();
@@ -139,5 +142,23 @@ public class AbstractWikidataBot {
 	public void setDryRun(boolean dryRun) {
 		this.dryRun = dryRun;
 	}
+	
+	public String getBatchId() {
+		return batchId;
+	}
+
+	public void setBatchId(String batchId) {
+		this.batchId = batchId;
+	}
+
+	public Integer getPauseBetweenEdits() {
+		return pauseBetweenEdits;
+	}
+
+	public void setPauseBetweenEdits(Integer pauseBetweenEdits) {
+		this.pauseBetweenEdits = pauseBetweenEdits;
+	}
+	
+	
 	
 }

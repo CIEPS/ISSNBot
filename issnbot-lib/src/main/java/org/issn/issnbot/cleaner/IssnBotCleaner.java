@@ -13,13 +13,8 @@ import org.issn.issnbot.AbstractWikidataBot;
 import org.issn.issnbot.IssnBot;
 import org.issn.issnbot.SerialItemDocument;
 import org.issn.issnbot.WikidataUpdateStatus;
-import org.issn.issnbot.listeners.IssnBotReportListener;
 import org.issn.issnbot.listeners.IssnBotListener.PropertyStatus;
 import org.issn.issnbot.model.WikidataIssnModel;
-import org.issn.issnbot.providers.WikidataDistributionFormatProvider;
-import org.issn.issnbot.providers.WikidataLanguageCodesProvider;
-import org.issn.issnbot.providers.WikidataSparqlCountryIdProvider;
-import org.issn.issnbot.providers.WikidataSparqlLanguageIdProvider;
 import org.issn.issnbot.read.SerialEntryReadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +33,9 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 	
 	private transient Map<String, EntityDocument> readAheadCache = new HashMap<>();
 	
-	private transient String batchIdentifier;
+	private transient long lastEditTimeMillis = -1;
+	
+	private int maxNbRetries = 5;
 	
 	public IssnBotCleaner(String login, String password) {
 		super(IssnBot.AGENT_NAME, login, password);
@@ -50,9 +47,8 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 		listeners.stream().forEach(l -> l.start());
 		
 		// generate batch ID
-		String batchId = Long.toString((new Random()).nextLong(), 16).replace("-", "");
-		this.batchIdentifier = "([[:toollabs:editgroups/b/ISSNBot/" + batchId + "|details]])";
-		log.info("Initialized batch identifier to : "+this.batchIdentifier);
+		this.batchId = Long.toString((new Random()).nextLong(), 16).replace("-", "");
+		log.info("Initialized batch identifier to : "+this.batchId);
 
 		List<ItemIdValue> entriesToClean = provider.getEntriesToClean();
 		log.debug("Cleaning "+entriesToClean.size()+" entries");
@@ -83,7 +79,7 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 	public void processBatch(List<ItemIdValue> currentBatch) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 		this.readAhead(currentBatch);
 		for (ItemIdValue anEntryToClean : currentBatch) {
-			clean(anEntryToClean.getId());
+			clean(anEntryToClean.getId(), 0);
 		}		
 	}
 	
@@ -91,7 +87,7 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 		this.readAheadCache = wbdf.getEntityDocuments(entityIds.stream().map(e -> e.getId()).collect(Collectors.toList()));
 	}
 	
-	public void clean(String qid) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
+	public void clean(String qid, int nbRetries) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 		// notify start item
 		listeners.stream().forEach(l -> l.startItem(qid));
 		
@@ -129,9 +125,23 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 			if(!this.dryRun ) {
 				log.debug("Calling API to update "+qid+"...");
 
+				String batchIdentifier = "([[:toollabs:editgroups/b/ISSNBot/" + this.batchId + "|details]])";
 				String currentEditSummary = IssnBot.AGENT_NAME+" cleaned entry because an ISSN used as a reference is not present on the item anymore";
 				
 				try {
+					
+					// pause if needed
+					long now = System.currentTimeMillis();
+					if(this.pauseBetweenEdits > 0 && this.lastEditTimeMillis > 0 && ((now - this.lastEditTimeMillis) < this.pauseBetweenEdits)) {
+						try {
+							long pauseTime = this.pauseBetweenEdits - (now - this.lastEditTimeMillis);
+							log.debug("Pausing for "+pauseTime+" millis...");
+						    Thread.sleep(pauseTime);
+						} catch(InterruptedException ex) {
+						    Thread.currentThread().interrupt();
+						}
+					}
+					
 					ItemDocument newItemDocument = wbde.updateTermsStatements(
 							Datamodel.makeWikidataItemIdValue(qid),
 							// addLabels,
@@ -147,15 +157,25 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 							// statements to delete						
 							statementsToDelete,
 							// summary
-							currentEditSummary+" | "+this.batchIdentifier,
+							currentEditSummary+" | "+batchIdentifier,
 							// tags
 							Collections.emptyList()
 					);
+					this.lastEditTimeMillis = System.currentTimeMillis();
 				} catch (Exception e) {
-					log.error(e.getMessage(),e);			
-					// notify error
-					listeners.stream().forEach(l -> l.errorItem(qid, e.getMessage()));
-					return;
+					
+					this.lastEditTimeMillis = System.currentTimeMillis();
+					log.error(e.getMessage(),e);	
+					if(nbRetries >= this.maxNbRetries) {		
+						// notify error
+						log.error("Reached maximum number of retries, notifying error.");
+						listeners.stream().forEach(l -> l.errorItem(qid, e.getMessage()));
+						return;
+					} else {
+						int updatedNbRetries = nbRetries++;
+						log.info("Got an API exception, retrying for "+updatedNbRetries+" time on a maximum of "+this.maxNbRetries+" times");
+						clean(qid, updatedNbRetries);
+					}
 				}
 				
 				log.debug("API called successfully");

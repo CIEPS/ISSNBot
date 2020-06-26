@@ -83,13 +83,17 @@ public class IssnBotReportListener implements IssnBotListener {
 			
 			// count creation by properties
 			if(anEntry.getValue().status == WikidataUpdateStatus.CREATED) {
-				if(!this.creationByProperties.containsKey(anEntry.getKey()) ) {
-					this.creationByProperties.put(anEntry.getKey(), 0L);
+				Integer realKey = (anEntry.getKey()%WikidataIssnModel.ISSN_PROPERTY_ID == 0)?WikidataIssnModel.ISSN_PROPERTY_ID:anEntry.getKey();
+				
+				if(!this.creationByProperties.containsKey(realKey) ) {
+					this.creationByProperties.put(realKey, 0L);
 				}
-				Long tempVal = this.creationByProperties.get(anEntry.getKey());
-				this.creationByProperties.put(anEntry.getKey(), ++tempVal);
+				Long tempVal = this.creationByProperties.get(realKey);
+				this.creationByProperties.put(realKey, ++tempVal);
 			}
-		}	
+		}
+
+		// populate previous statuses
 		for (Map.Entry<Integer, IssnBotListener.PropertyStatus> anEntry : result.getPreviousValuesStatuses().entrySet()) {
 			Long value = this.countByStatuses.get(anEntry.getValue().status);
 			this.countByStatuses.put(anEntry.getValue().status, ++value);

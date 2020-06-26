@@ -76,4 +76,9 @@ public class WikidataLanguageCodesProvider {
 		log.info("Wikimedia language codes map : \n"+this.languageCodes.entrySet().stream().map(e -> e.getKey()+"="+e.getValue()).collect(Collectors.joining("\n")));
 
 	}
+
+	public Map<String, String> getLanguageCodes() {
+		return languageCodes;
+	}
+	
 }

@@ -3,7 +3,6 @@ package org.issn.issnbot.app.clean_serials;
 import java.io.File;
 
 import org.issn.issnbot.app.AbstractBotArguments;
-import org.issn.issnbot.app.ExistingFileValidator;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
@@ -23,20 +22,12 @@ public class ArgumentsCleanSerials extends AbstractBotArguments {
 		super();
 	}
 
-
 	@Parameter(
 			names = { "output" },
 			description = "Path to output directory. Defaults to 'output'",			
 			converter = FileConverter.class
 	)
 	protected File output = new File("output");
-	
-	@Parameter(
-			names = { "login" },
-			description = "Wikidata login to use. Defaults to 'IssnBot'. Password must be provided in the 'password' System property",			
-			required = false
-	)
-	protected String login = "IssnBot";
 	
 	@Parameter(
 			names = { "update" },
@@ -47,10 +38,6 @@ public class ArgumentsCleanSerials extends AbstractBotArguments {
 
 	public File getOutput() {
 		return output;
-	}
-
-	public String getLogin() {
-		return login;
 	}
 
 	public boolean isUpdate() {

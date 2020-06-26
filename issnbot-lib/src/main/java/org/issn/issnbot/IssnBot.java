@@ -20,6 +20,7 @@ import org.issn.issnbot.listeners.IssnBotReportListener;
 import org.issn.issnbot.model.IssnValue;
 import org.issn.issnbot.model.SerialEntry;
 import org.issn.issnbot.model.WikidataIssnModel;
+import org.issn.issnbot.providers.PropertiesLanguageCodesProvider;
 import org.issn.issnbot.providers.WikidataDistributionFormatProvider;
 import org.issn.issnbot.providers.WikidataIdProviderIfc;
 import org.issn.issnbot.providers.WikidataLanguageCodesProvider;
@@ -52,7 +53,7 @@ public class IssnBot extends AbstractWikidataBot {
 
 	private WikidataIdProviderIfc languageIdProvider;
 	private WikidataIdProviderIfc countryIdProvider;
-	private WikidataLanguageCodesProvider languageCodes;
+	private Map<String, String> languageCodes;
 	private WikidataIdProviderIfc formatsIdProvider;
 
 	private List<IssnBotListener> listeners = new ArrayList<IssnBotListener>();
@@ -61,20 +62,21 @@ public class IssnBot extends AbstractWikidataBot {
 	
 	private transient Date runDate;
 	private transient String currentFileName;
-	private transient String batchIdentifier;
 	
 	private transient int serialsProcessed = 0;
 	
 	private transient Map<String, EntityDocument> readAheadCache = new HashMap<>();
 	
+	private transient long lastEditTimeMillis = -1;
 	
+	private int maxNbRetries = 5;
 	
 	public IssnBot(
 			String login,
 			String password,
 			WikidataIdProviderIfc languageIdProvider,
 			WikidataIdProviderIfc countryIdProvider,
-			WikidataLanguageCodesProvider languageCodes,
+			Map<String, String> languageCodes,
 			WikidataIdProviderIfc formatsIdProvider
 	) {
 
@@ -86,13 +88,6 @@ public class IssnBot extends AbstractWikidataBot {
 		this.formatsIdProvider = formatsIdProvider;
 	}
 
-	public void initBatch(String batchId) {
-		// init a batch identifier
-		// String batchId = Long.toString((new Random()).nextLong(), 16).replace("-", "");
-		this.batchIdentifier = "([[:toollabs:editgroups/b/ISSNBot/" + batchId + "|details]])";
-		log.info("Initialized batch identifier to : "+this.batchIdentifier);
-	}
-
 
 	public void processFolder(File inputFolder) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 
@@ -102,16 +97,20 @@ public class IssnBot extends AbstractWikidataBot {
 		// notify start
 		listeners.forEach(l -> l.start(inputFolder));
 
+		if(this.batchId == null) {
+			// assign batch ID - each run gets its own batch ID
+			this.batchId = Long.toString((new Random()).nextLong(), 16).replace("-", "");
+			log.info("Initialized batch identifier to : "+this.batchId);
+		}
+		
 		// recurse in subdirs
-		for (File anInputFile : FileUtils.listFiles(inputFolder, new String[] {"csv", "xls", "tsv"}, true)) {			
-			// assign batch ID - each processed file got its own batch ID
-			String batchId = Long.toString((new Random()).nextLong(), 16).replace("-", "");
+		for (File anInputFile : FileUtils.listFiles(inputFolder, new String[] {"csv", "xls", "tsv"}, true)) {				
 			// keep track of current file name to put in edit messages
 			this.currentFileName = anInputFile.getName();
 			// init CSV reader
 			SerialEntryReader reader = new CSVSerialEntryReader(new FileInputStream(anInputFile));
 			// process the file
-			this.process(reader, anInputFile.getName(), batchId);
+			this.process(reader.read(), anInputFile.getName());
 			// if we have reached the limit, stop
 			if(limit > 0 && serialsProcessed == limit) {
 				break;
@@ -126,13 +125,11 @@ public class IssnBot extends AbstractWikidataBot {
 		this.readAheadCache = wbdf.getEntityDocuments(entityIds);
 	}
 
-	public void process(SerialEntryReader reader, String filename, String batchId) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
+	public void process(List<SerialEntry> entries, String filename) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 
-		// notify start batch
+		// notify start file
 		listeners.stream().forEach(l -> l.startFile(filename));
 
-		this.initBatch(batchId);
-		List<SerialEntry> entries = reader.read();
 		log.debug("Processing "+entries.size()+" entries in batch ID "+batchId);
 		if(this.dryRun) {
 			log.debug("Operating in dry run, no real updates will take place in Wikidata");
@@ -163,19 +160,19 @@ public class IssnBot extends AbstractWikidataBot {
 			currentBatch = new ArrayList<>();
 		}
 
-		// notify end batch
+		// notify end file
 		listeners.stream().forEach(l -> l.stopFile(filename));
 	}
 	
 	public void processBatch(List<SerialEntry> currentBatch) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 		this.readAhead(currentBatch.stream().map(e -> e.getWikidataId()).collect(Collectors.toList()));
 		for (SerialEntry serialEntry : currentBatch) {
-			processSerial(serialEntry);
+			processSerial(serialEntry, 0);
 		}
 		
 	}
 
-	public void processSerial(SerialEntry entry) {
+	public void processSerial(SerialEntry entry, int nbRetries) {
 		log.debug("Processing row "+entry.getRecordNumber()+" : "+entry.getIssnL());
 
 		// notify serial
@@ -189,7 +186,7 @@ public class IssnBot extends AbstractWikidataBot {
 			
 			
 			// check availability of language code
-			if(this.languageCodes.getWikimediaCode(entry.getLang().getValue()) == null) {
+			if(this.languageCodes.get(entry.getLang().getValue()) == null) {
 				throw new IssnBotException(entry.getIssnL()+" - Language code "+entry.getLang().getValue()+" is not an iso6392 code associated to a Wikimedia code in Wikidata.");
 			}
 			
@@ -256,12 +253,28 @@ public class IssnBot extends AbstractWikidataBot {
 			} else {
 				
 				if(!this.dryRun ) {
-					log.debug("Calling API to update "+entry.getWikidataId()+"...");
-					log.debug("Added Statements "+statementsToAdd.toString()+"...");
 					
+					
+					String batchIdentifier = "([[:toollabs:editgroups/b/ISSNBot/" + this.batchId + "|details]])";
 					String currentEditSummary = (this.editSummary != null)?this.editSummary:AGENT_NAME+" synch ISSN-L "+entry.getIssnL()+" from "+this.currentFileName+" at "+MESSAGE_DATE_FORMAT.format(this.runDate);
 					
 					try {
+						
+						// pause if needed
+						long now = System.currentTimeMillis();
+						if(this.pauseBetweenEdits > 0 && this.lastEditTimeMillis > 0 && ((now - this.lastEditTimeMillis) < this.pauseBetweenEdits)) {
+							try {
+								long pauseTime = this.pauseBetweenEdits - (now - this.lastEditTimeMillis);
+								log.debug("Pausing for "+pauseTime+" millis...");
+							    Thread.sleep(pauseTime);
+							} catch(InterruptedException ex) {
+							    Thread.currentThread().interrupt();
+							}
+						}
+						
+						log.debug("Calling API to update "+entry.getWikidataId()+"...");
+						log.debug("Added Statements "+statementsToAdd.toString()+"...");
+						
 						ItemDocument newItemDocument = wbde.updateTermsStatements(
 								entityId,
 								// addLabels,
@@ -277,15 +290,24 @@ public class IssnBot extends AbstractWikidataBot {
 								// statements to delete						
 								statementsToDelete,
 								// summary
-								currentEditSummary+" | "+this.batchIdentifier,
+								currentEditSummary+" | "+batchIdentifier,
 								// tags
 								Collections.emptyList()
 						);
+						this.lastEditTimeMillis = System.currentTimeMillis();
 					} catch (Exception e) {
-						log.error(e.getMessage(),e);			
-						// notify error
-						listeners.stream().forEach(l -> l.errorSerial(entry, true, e.getMessage()));
-						return;
+						this.lastEditTimeMillis = System.currentTimeMillis();
+						log.error(e.getMessage(),e);	
+						if(nbRetries >= this.maxNbRetries) {		
+							// notify error
+							log.error("Reached maximum number of retries, notifying error.");
+							listeners.stream().forEach(l -> l.errorSerial(entry, true, e.getMessage()));
+							return;
+						} else {
+							int updatedNbRetries = nbRetries++;
+							log.info("Got an API exception, retrying for "+updatedNbRetries+" time on a maximum of "+this.maxNbRetries+" times");
+							processSerial(entry, updatedNbRetries);
+						}						
 					}
 					
 					log.debug("API called successfully");
@@ -315,10 +337,6 @@ public class IssnBot extends AbstractWikidataBot {
 		this.editSummary = editSummary;
 	}
 
-	public String getBatchIdentifier() {
-		return batchIdentifier;
-	}
-
 	public List<IssnBotListener> getListeners() {
 		return listeners;
 	}
@@ -338,7 +356,7 @@ public class IssnBot extends AbstractWikidataBot {
 					args[1],
 					new WikidataSparqlLanguageIdProvider(),
 					new WikidataSparqlCountryIdProvider(),
-					new WikidataLanguageCodesProvider(),
+					new PropertiesLanguageCodesProvider().getLanguageCodes(),
 					new WikidataDistributionFormatProvider()
 					);
 			agent.getListeners().add(new IssnBotReportListener());
