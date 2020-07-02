@@ -50,10 +50,10 @@ public class AbstractBotArguments {
 	
 	@Parameter(
 			names = { "pauseBetweenEdits" },
-			description = "Ensures the bot wais a given number of milliseconds between each call to the API. Wikidata Java API ensures an _average_ time between edits, defaulting to 2000ms, but computed in a window of 9 edits, and calls may be rejected before that. Set this value lower than 2000. Defaults to 1200.",			
+			description = "Ensures the bot waits a given number of milliseconds between each call to the API. Wikidata Java API ensures an _average_ time between edits, defaulting to 2000ms, but computed in a window of 9 edits, and calls may be rejected before that. Set this value lower than 2000. Defaults to 1000.",			
 			required = false
 	)
-	protected Integer pauseBetweenEdits = 1200;
+	protected Integer pauseBetweenEdits = 1000;
 	
 	@Parameter(
 			names = { "batchId" },

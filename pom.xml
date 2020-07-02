@@ -4,7 +4,7 @@
 
     <groupId>org.issn</groupId>
     <artifactId>issnbot-root-pom</artifactId>
-    <version>0.1</version>
+    <version>0.9</version>
     <packaging>pom</packaging>
 
     <name>ISSN Bot Root POM</name>
