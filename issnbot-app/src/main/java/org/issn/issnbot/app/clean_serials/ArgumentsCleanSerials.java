@@ -1,6 +1,8 @@
 package org.issn.issnbot.app.clean_serials;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.issn.issnbot.app.AbstractBotArguments;
 
@@ -35,6 +37,12 @@ public class ArgumentsCleanSerials extends AbstractBotArguments {
 			required = false
 	)
 	protected boolean update = false;
+	
+	@Parameter(
+			names = { "qid" },
+			description = "A Wikidata qid to clean, e.g. 'Q123456'. The parameter can be repeated any number of times. If provided, only these list of QIDs will be cleaned."
+	)
+	protected List<String> qid = new ArrayList<>();
 
 	public File getOutput() {
 		return output;
@@ -42,6 +50,10 @@ public class ArgumentsCleanSerials extends AbstractBotArguments {
 
 	public boolean isUpdate() {
 		return update;
+	}
+
+	public List<String> getQid() {
+		return qid;
 	}
 	
 	

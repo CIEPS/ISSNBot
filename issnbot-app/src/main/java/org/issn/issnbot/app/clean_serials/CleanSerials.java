@@ -1,11 +1,15 @@
 package org.issn.issnbot.app.clean_serials;
 
+import java.util.stream.Collectors;
+
 import org.issn.issnbot.app.CommandIfc;
 import org.issn.issnbot.cleaner.IssnBotCleaner;
 import org.issn.issnbot.cleaner.IssnBotCleanerOutputListener;
+import org.issn.issnbot.cleaner.ListEntriesToCleanProvider;
 import org.issn.issnbot.cleaner.TitleBasedEntriesToCleanProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wikidata.wdtk.datamodel.helpers.Datamodel;
 
 public class CleanSerials implements CommandIfc {
 
@@ -49,7 +53,12 @@ public class CleanSerials implements CommandIfc {
 			}
 			
 			// run cleaning
-			bot.clean(new TitleBasedEntriesToCleanProvider());
+			if(args.getQid() != null && !args.getQid().isEmpty() ) {
+				bot.clean(new ListEntriesToCleanProvider(args.getQid().stream().map(id -> Datamodel.makeWikidataItemIdValue(id)).collect(Collectors.toList())));
+			} else {
+				bot.clean(new TitleBasedEntriesToCleanProvider());
+			}
+			
 			
 			log.info("Command : "+this.getClass().getSimpleName()+" finished successfully in {} ms", (System.currentTimeMillis() - start));
 		} catch (Exception e) {
