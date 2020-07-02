@@ -146,6 +146,7 @@ public class IssnBot extends AbstractWikidataBot {
 			if(currentBatch.size() == BATCH_SIZE) {
 				processBatch(currentBatch);
 				currentBatch = new ArrayList<>();
+				log.info("Processed "+this.serialsProcessed+" / "+entries.size());
 			}
 			
 			if(limit > 0 && serialsProcessed == limit) {
@@ -158,6 +159,7 @@ public class IssnBot extends AbstractWikidataBot {
 		if(currentBatch.size() > 0) {
 			processBatch(currentBatch);
 			currentBatch = new ArrayList<>();
+			log.info("Processed "+this.serialsProcessed+" / "+entries.size());
 		}
 
 		// notify end file
