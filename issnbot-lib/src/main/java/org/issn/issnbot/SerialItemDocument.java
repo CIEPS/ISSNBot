@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.issn.issnbot.model.WikidataIssnModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wikidata.wdtk.datamodel.interfaces.EntityDocument;
 import org.wikidata.wdtk.datamodel.interfaces.ItemDocument;
 import org.wikidata.wdtk.datamodel.interfaces.ItemIdValue;
@@ -27,6 +29,8 @@ import org.wikidata.wdtk.datamodel.interfaces.ValueSnak;
  */
 public class SerialItemDocument {
 
+	private final Logger log = LoggerFactory.getLogger(this.getClass().getName());
+	
 	private ItemDocument itemDocument;
 	
 	public SerialItemDocument(EntityDocument entityDocument) {
@@ -80,10 +84,14 @@ public class SerialItemDocument {
 		// we compare on string value and language code only, not on qualifiers
 		// and we compare ignoring case
 		return statements.stream().filter(
-				s -> 
+				s -> {
+					log.debug("Comparing "+((MonolingualTextValue)s.getValue()).getText()+"@"+((MonolingualTextValue)s.getValue()).getLanguageCode()+" vs. "+title+"@"+langCode);
+					return
 					((MonolingualTextValue)s.getValue()).getText().equalsIgnoreCase(title)
 					&&
 					((MonolingualTextValue)s.getValue()).getLanguageCode().equals(langCode)
+					;
+				}
 		).findFirst();
 	}
 	

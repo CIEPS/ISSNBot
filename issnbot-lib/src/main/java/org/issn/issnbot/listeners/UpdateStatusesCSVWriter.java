@@ -64,10 +64,10 @@ public class UpdateStatusesCSVWriter implements UpdateStatusesWriter {
 		// empty message when success
 		printer.print("");
 		for (Map.Entry<Integer, IssnBotListener.PropertyStatus> aPropStatus : updateStatuses.entrySet()) {
-			printer.print(aPropStatus.getValue().status+((aPropStatus.getValue().precision != null)?" ("+aPropStatus.getValue().precision+")":""));
+			printer.print(aPropStatus.getValue().status+((aPropStatus.getValue().precision != null && !aPropStatus.getValue().precision.equals(""))?" ("+aPropStatus.getValue().precision+")":""));
 		}
 		for (Map.Entry<Integer, IssnBotListener.PropertyStatus> aPropStatus : previousValueUpdateStatuses.entrySet()) {
-			printer.print(aPropStatus.getValue().status+((aPropStatus.getValue().precision != null)?" ("+aPropStatus.getValue().precision+")":""));
+			printer.print(aPropStatus.getValue().status+((aPropStatus.getValue().precision != null && !aPropStatus.getValue().precision.equals(""))?" ("+aPropStatus.getValue().precision+")":""));
 		}
 		printer.println();
 	}

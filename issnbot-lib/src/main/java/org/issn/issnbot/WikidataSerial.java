@@ -111,11 +111,8 @@ public class WikidataSerial {
 			throw new IssnBotException(serial.getIssnL()+" - Unable to find corresponding wikidata entry for language code '"+langCode+"'");
 		}
 		
-		// availability of language code was checked before
-		String wikimediaLangCode = this.languageCodes.get(langCode);
-		
 		// find existing statement
-		Optional<Statement> existingStatement = serialItem.findTitleStatement(serial.getTitle().getValue(), wikimediaLangCode);
+		Optional<Statement> existingStatement = serialItem.findLanguageStatement(langValue);
 		
 		StatementBuilder sb = null;
 		if(!existingStatement.isPresent()) {		
@@ -232,6 +229,8 @@ public class WikidataSerial {
 		} else {
 			log.debug(serial.getIssnL()+" - Place of Publication : NOTHING");
 			notify(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.NOTHING);
+			// we need a value for the previous place of publication action
+			notifyPreviousValueAction(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_NONE);
 		}
 		
 		if(sb != null) {
@@ -463,7 +462,7 @@ public class WikidataSerial {
 		if(atLeastOneDeletion) {
 			log.debug(serial.getIssnL()+" - ISSN previous value : DELETE");
 			notifyPreviousValueAction(WikidataIssnModel.ISSN_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_DELETED);
-		} else if (this.serialItem.getOfficialWebsiteStatements().size() > 0){
+		} else if (this.serialItem.getIssnStatements().size() > 0){
 			log.debug(serial.getIssnL()+" - ISSN previous value : UNTOUCHED");
 			notifyPreviousValueAction(WikidataIssnModel.ISSN_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_UNTOUCHED);
 		} else {
@@ -486,26 +485,30 @@ public class WikidataSerial {
 				StatementBuilder sb = null;
 				Optional<Statement> existingCancelledIssnStatement = serialItem.findCancelledIssnStatement(aCancelledIssn);
 				
-				if(!existingCancelledIssnStatement.isPresent()) {
-					log.debug(serial.getIssnL()+" - Cancelled ISSN : CREATE");
-					statuses.add(WikidataUpdateStatus.CREATED);
-					status = (status == null || status == WikidataUpdateStatus.CREATED)?WikidataUpdateStatus.CREATED:WikidataUpdateStatus.MIXED;
+				if(!existingCancelledIssnStatement.isPresent()) {					
+					if(serialItem.findIssnStatement(aCancelledIssn).isPresent()) {
+						// value exists as a plain not deprecated ISSN
+						log.debug(serial.getIssnL()+" - Cancelled ISSN : SET DEPRECATED");
+						statuses.add(WikidataUpdateStatus.SET_DEPRECATED);
+						status = (status == null || status == WikidataUpdateStatus.SET_DEPRECATED)?WikidataUpdateStatus.SET_DEPRECATED:WikidataUpdateStatus.MIXED;
+						
+						sb = copy(serialItem.findIssnStatement(aCancelledIssn).get())
+								.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.REASON_FOR_DEPRECATION_PROPERTY_ID), WikidataIssnModel.INCORRECT_IDENTIFER_VALUE)
+								.withRank(StatementRank.DEPRECATED);
+					} else {
+						// value does not exists
+						log.debug(serial.getIssnL()+" - Cancelled ISSN : CREATE");
+						statuses.add(WikidataUpdateStatus.CREATED);
+						status = (status == null || status == WikidataUpdateStatus.CREATED)?WikidataUpdateStatus.CREATED:WikidataUpdateStatus.MIXED;
 
-					sb = StatementBuilder
-							.forSubjectAndProperty(serialItem.getEntityId(), WikidataIssnModel.toWikidataProperty(WikidataIssnModel.ISSN_PROPERTY_ID))
-							.withValue(Datamodel.makeStringValue(aCancelledIssn))
-							.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.REASON_FOR_DEPRECATION_PROPERTY_ID), WikidataIssnModel.INCORRECT_IDENTIFER_VALUE)
-							.withRank(StatementRank.DEPRECATED);
-
-				} else if(serialItem.findIssnStatement(aCancelledIssn).isPresent()) {
-					// find plain ISSN statements that are actually cancelled, in that case deprecate them
-					log.debug(serial.getIssnL()+" - Cancelled ISSN : SET DEPRECATED");
-					statuses.add(WikidataUpdateStatus.SET_DEPRECATED);
-					
-					sb = copy(serialItem.findIssnStatement(aCancelledIssn).get())
-							.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.REASON_FOR_DEPRECATION_PROPERTY_ID), WikidataIssnModel.INCORRECT_IDENTIFER_VALUE)
-							.withRank(StatementRank.DEPRECATED);
+						sb = StatementBuilder
+								.forSubjectAndProperty(serialItem.getEntityId(), WikidataIssnModel.toWikidataProperty(WikidataIssnModel.ISSN_PROPERTY_ID))
+								.withValue(Datamodel.makeStringValue(aCancelledIssn))
+								.withQualifierValue(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.REASON_FOR_DEPRECATION_PROPERTY_ID), WikidataIssnModel.INCORRECT_IDENTIFER_VALUE)
+								.withRank(StatementRank.DEPRECATED);
+					}
 				} else {
+					// already exists as deprecated, do nothing
 					log.debug(serial.getIssnL()+" - Cancelled ISSN : NOTHING");
 					statuses.add(WikidataUpdateStatus.NOTHING);
 					status = (status == null || status == WikidataUpdateStatus.NOTHING)?WikidataUpdateStatus.NOTHING:WikidataUpdateStatus.MIXED;
@@ -518,7 +521,11 @@ public class WikidataSerial {
 			}
 		}
 		
-		notifyPreviousValueAction(WikidataIssnModel.FAKE_CANCELLED_ISSN_PROPERTY, status, statuses.stream().map(s -> s.name()).collect(Collectors.joining(" ")));
+		if(status == null) {
+			status = WikidataUpdateStatus.NOTHING;
+		}
+		
+		notify(WikidataIssnModel.FAKE_CANCELLED_ISSN_PROPERTY, status, statuses.stream().map(s -> s.name()).collect(Collectors.joining(" ")));
 		
 		
 		return result;
