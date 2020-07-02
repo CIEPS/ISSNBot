@@ -37,6 +37,8 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 	
 	private int maxNbRetries = 5;
 	
+	private transient int nbSerialsProcessed = 0;
+	
 	public IssnBotCleaner(String login, String password) {
 		super(IssnBot.AGENT_NAME, login, password);
 	}
@@ -63,6 +65,7 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 			if(currentBatch.size() == BATCH_SIZE) {
 				processBatch(currentBatch);
 				currentBatch = new ArrayList<>();
+				log.info("Processed "+this.nbSerialsProcessed+" / "+entriesToClean.size());
 			}
 		}
 		
@@ -70,6 +73,7 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 		if(currentBatch.size() > 0) {
 			processBatch(currentBatch);
 			currentBatch = new ArrayList<>();
+			log.info("Processed "+this.nbSerialsProcessed+" / "+entriesToClean.size());
 		}
 
 		// notify stop
@@ -80,7 +84,7 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 		this.readAhead(currentBatch);
 		for (ItemIdValue anEntryToClean : currentBatch) {
 			clean(anEntryToClean.getId(), 0);
-		}		
+		}
 	}
 	
 	public void readAhead(List<ItemIdValue> entityIds) throws MediaWikiApiErrorException, IOException {
@@ -90,7 +94,6 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 	public void clean(String qid, int nbRetries) throws IOException, MediaWikiApiErrorException, SerialEntryReadException {
 		// notify start item
 		listeners.stream().forEach(l -> l.startItem(qid));
-		
 		
 		ItemDocument currentItem = (ItemDocument)this.readAheadCache.get(qid);
 		if(currentItem == null) {
@@ -184,6 +187,9 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 			
 			// notify success
 			listeners.stream().forEach(l -> l.successItem(qid, false, statuses));
+			
+			// increment count
+			this.nbSerialsProcessed++;
 		}
 	}
 	
