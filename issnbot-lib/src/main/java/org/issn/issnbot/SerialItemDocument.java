@@ -1,5 +1,6 @@
 package org.issn.issnbot;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +50,7 @@ public class SerialItemDocument {
 		return (
 				this.itemDocument.getLabels().get(lang) != null
 				&&
-				this.itemDocument.getLabels().get(lang).getText().equalsIgnoreCase(title)
+				Normalizer.normalize(this.itemDocument.getLabels().get(lang).getText(), Normalizer.Form.NFC).equalsIgnoreCase(Normalizer.normalize(title, Normalizer.Form.NFC))
 		);
 	}
 	
@@ -62,7 +63,7 @@ public class SerialItemDocument {
 	public Optional<MonolingualTextValue> findAlias(String title, String lang) {
 		if(this.itemDocument.getAliases().get(lang) != null) {
 			for (MonolingualTextValue aValue : this.itemDocument.getAliases().get(lang)) {
-				if(aValue.getText().equalsIgnoreCase(title)) {
+				if(Normalizer.normalize(aValue.getText(), Normalizer.Form.NFC).equalsIgnoreCase(Normalizer.normalize(title, Normalizer.Form.NFC))) {
 					return Optional.of(aValue);
 				}
 			}
@@ -85,9 +86,9 @@ public class SerialItemDocument {
 		// and we compare ignoring case
 		return statements.stream().filter(
 				s -> {
-					log.debug("Comparing "+((MonolingualTextValue)s.getValue()).getText()+"@"+((MonolingualTextValue)s.getValue()).getLanguageCode()+" vs. "+title+"@"+langCode);
 					return
-					((MonolingualTextValue)s.getValue()).getText().equalsIgnoreCase(title)
+					Normalizer.normalize(((MonolingualTextValue)s.getValue()).getText(), Normalizer.Form.NFC).equalsIgnoreCase(Normalizer.normalize(title, Normalizer.Form.NFC))
+					// ((MonolingualTextValue)s.getValue()).getText().equals(title)
 					&&
 					((MonolingualTextValue)s.getValue()).getLanguageCode().equals(langCode)
 					;
@@ -339,7 +340,10 @@ public class SerialItemDocument {
 				&&
 				(((ValueSnak)snak).getValue() instanceof StringValue)
 				&&
-				((StringValue)((ValueSnak)snak).getValue()).getString().equals(keyTitle)
+				Normalizer.normalize(
+						((StringValue)((ValueSnak)snak).getValue()).getString(),
+						Normalizer.Form.NFC
+				).equals(Normalizer.normalize(keyTitle, Normalizer.Form.NFC))
 			)
 		);
 	}
@@ -422,6 +426,14 @@ public class SerialItemDocument {
 	public static void main(String...strings) {
 		String TEST = "http://budabester-zeitung/";
 		System.out.println(TEST.substring(0, TEST.length()-1));
+		
+		String TEST1 = "Kinema jumpō@ja";
+		String TEST2 = "Kinema jumpō@ja";
+		System.out.println(TEST1.equalsIgnoreCase(TEST2));
+		System.out.println(TEST1+" => "+Normalizer.normalize(TEST1, Normalizer.Form.NFC));
+		System.out.println(TEST2+" => "+Normalizer.normalize(TEST2, Normalizer.Form.NFC));
+		System.out.println(Normalizer.normalize(TEST1, Normalizer.Form.NFC).equalsIgnoreCase(Normalizer.normalize(TEST2, Normalizer.Form.NFC)));
+		// Normalizer.normalize(TEST1, Normalizer.Form.NFC);
 	}
 	
 	
