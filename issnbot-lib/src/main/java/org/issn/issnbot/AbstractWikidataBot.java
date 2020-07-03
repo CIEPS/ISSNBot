@@ -27,6 +27,7 @@ public class AbstractWikidataBot {
 	protected Integer wikidata_maxLagMaxRetries = null;
 	protected Double  wikidata_maxLagBackoffFactor = null;
 	protected Integer wikidata_maxLagFirstWaitTime = null;
+	protected Integer wikidata_averageTimePerEdit = null;
 	protected Integer pauseBetweenEdits = -1;
 	
 	protected transient WikibaseDataEditor wbde;
@@ -65,7 +66,11 @@ public class AbstractWikidataBot {
 		if(this.wikidata_maxLagMaxRetries != null) {
 			this.wbde.setMaxLagMaxRetries(this.wikidata_maxLagMaxRetries);
 		}
-		log.info("Wikidata connection parameters : maxLag="+this.wbde.getMaxLag()+" seconds, firstWaitTime="+this.wbde.getMaxLagFirstWaitTime()+", backoffFactor="+this.wbde.getMaxLagBackOffFactor()+", maxRetries="+this.wbde.getMaxLagMaxRetries());
+		if(this.wikidata_averageTimePerEdit != null) {
+			this.wbde.setAverageTimePerEdit(this.wikidata_averageTimePerEdit);
+		}
+		
+		log.info("Wikidata connection parameters : maxLag="+this.wbde.getMaxLag()+" seconds, firstWaitTime="+this.wbde.getMaxLagFirstWaitTime()+", backoffFactor="+this.wbde.getMaxLagBackOffFactor()+", maxRetries="+this.wbde.getMaxLagMaxRetries()+", averageTimePerEdit="+this.wbde.getAverageTimePerEdit());
 
 		this.wbdf = new WikibaseDataFetcher(connection, Datamodel.SITE_WIKIDATA);
 		// we don't care about site links
@@ -85,46 +90,45 @@ public class AbstractWikidataBot {
 		return wikidata_maxLag;
 	}
 
-
 	public void setWikidata_maxLag(Integer wikidata_maxLag) {
 		this.wikidata_maxLag = wikidata_maxLag;
 	}
-
 
 	public Integer getWikidata_maxLagMaxRetries() {
 		return wikidata_maxLagMaxRetries;
 	}
 
-
 	public void setWikidata_maxLagMaxRetries(Integer wikidata_maxLagMaxRetries) {
 		this.wikidata_maxLagMaxRetries = wikidata_maxLagMaxRetries;
 	}
-
 
 	public Double getWikidata_maxLagBackoffFactor() {
 		return wikidata_maxLagBackoffFactor;
 	}
 
-
 	public void setWikidata_maxLagBackoffFactor(Double wikidata_maxLagBackoffFactor) {
 		this.wikidata_maxLagBackoffFactor = wikidata_maxLagBackoffFactor;
 	}
-
 
 	public Integer getWikidata_maxLagFirstWaitTime() {
 		return wikidata_maxLagFirstWaitTime;
 	}
 
-
 	public void setWikidata_maxLagFirstWaitTime(Integer wikidata_maxLagFirstWaitTime) {
 		this.wikidata_maxLagFirstWaitTime = wikidata_maxLagFirstWaitTime;
 	}
 
+	public Integer getWikidata_averageTimePerEdit() {
+		return wikidata_averageTimePerEdit;
+	}
+
+	public void setWikidata_averageTimePerEdit(Integer wikidata_averageTimePerEdit) {
+		this.wikidata_averageTimePerEdit = wikidata_averageTimePerEdit;
+	}
 
 	public String getAgentName() {
 		return agentName;
 	}
-
 
 	public String getLogin() {
 		return login;

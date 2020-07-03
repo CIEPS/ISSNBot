@@ -117,8 +117,8 @@ public class WikidataSerial {
 		StatementBuilder sb = null;
 		if(!existingStatement.isPresent()) {		
 			// value is not here, let's check if a statement is present with a different value but with proper references
-			List<Statement> existingTitlesWithIssnReference = this.serialItem.findStatementsWithIssnReference(WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID);
-			if(existingTitlesWithIssnReference.isEmpty()) {
+			List<Statement> existingLanguageWithIssnReference = this.serialItem.findStatementsWithIssnReference(WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID);
+			if(existingLanguageWithIssnReference.isEmpty()) {
 				// nothing, let's create the value
 				log.debug(serial.getIssnL()+" - Language : CREATE");
 				notify(WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID, WikidataUpdateStatus.CREATED);
@@ -126,11 +126,11 @@ public class WikidataSerial {
 						.forSubjectAndProperty(serialItem.getEntityId(), WikidataIssnModel.toWikidataProperty(WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID))
 						.withValue(langValue)
 						.withReference(WikidataSerial.buildStatementReference(referenceIssn));
-			} else if(existingTitlesWithIssnReference.size() == 1) {
+			} else if(existingLanguageWithIssnReference.size() == 1) {
 				log.debug(serial.getIssnL()+" - Language : UPDATE");
 				notify(WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID, WikidataUpdateStatus.UPDATED);
 				// if there is an existing statement with an ISSN reference but a different value, overwrite it
-				sb = copyWithoutValue(existingTitlesWithIssnReference.get(0))
+				sb = copyWithoutValue(existingLanguageWithIssnReference.get(0))
 						.withValue(langValue);
 			} else {
 				// multiple existing values with an ISSN reference ? don't know what to do
