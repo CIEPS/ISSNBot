@@ -50,14 +50,21 @@ public class AbstractBotArguments {
 	
 	@Parameter(
 			names = { "pauseBetweenEdits" },
-			description = "Ensures the bot waits a given number of milliseconds between each call to the API. Wikidata Java API ensures an _average_ time between edits, defaulting to 2000ms, but computed in a window of 9 edits, and calls may be rejected before that. Set this value lower than 2000. Defaults to 1000.",			
+			description = "Ensures the bot waits a given number of milliseconds between each call to the API. Wikidata Java API ensures an _average_ time between edits, defaulting to 2000ms, in option averageTimePerEdit, but computed in a window of 9 edits, and calls may be rejected before that. Set this value lower than 2000. Defaults to 1000.",			
 			required = false
 	)
 	protected Integer pauseBetweenEdits = 1000;
 	
 	@Parameter(
+			names = { "averageTimePerEdit" },
+			description = "Ensures an _average_ time per edit. This needs to be greater than pauseBetweenEdits. This is computed by Wikidata Toolkit after 9 edits. Defaults to 2000.",			
+			required = false
+	)
+	protected Integer averageTimePerEdit = 2000;
+	
+	@Parameter(
 			names = { "batchId" },
-			description = "Sets a batchId so that the updates made in multiple runs of the bot are tracked in a single batchID so they can be rollbacked together. If not provided, a default batchId is set. batchId should be uninformative hexadecimal hash, see https://www.wikidata.org/wiki/Wikidata:Edit_groups/Adding_a_tool#For_custom_bots"		
+			description = "Sets a batchId so that the updates made in multiple runs of the bot are tracked in a single batchID so they can be rollbacked together. If not provided, a default batchId is set. batchId should be uninformative hexadecimal hash of 16 characters, see https://www.wikidata.org/wiki/Wikidata:Edit_groups/Adding_a_tool#For_custom_bots"		
 	)
 	protected String batchId = null;
 	
@@ -89,6 +96,13 @@ public class AbstractBotArguments {
 	public Integer getPauseBetweenEdits() {
 		return pauseBetweenEdits;
 	}
-	
+
+	public Integer getAverageTimePerEdit() {
+		return averageTimePerEdit;
+	}
+
+	public void setAverageTimePerEdit(Integer averageTimePerEdit) {
+		this.averageTimePerEdit = averageTimePerEdit;
+	}
 	
 }

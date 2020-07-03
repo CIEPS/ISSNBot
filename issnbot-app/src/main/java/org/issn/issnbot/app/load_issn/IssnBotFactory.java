@@ -61,6 +61,7 @@ public class IssnBotFactory {
 		bot.setWikidata_maxLagFirstWaitTime(args.getMaxLagFirstWaitTime());
 		bot.setWikidata_maxLagBackoffFactor(args.getMaxLagBackoffFactor());
 		bot.setWikidata_maxLagMaxRetries(args.getMaxLagMaxRetries());
+		bot.setWikidata_averageTimePerEdit(args.getAverageTimePerEdit());
 		
 		bot.getListeners().add(new IssnBotReportListener());
 		bot.getListeners().add(new IssnBotOutputListener(args.getOutput(), args.getError()));

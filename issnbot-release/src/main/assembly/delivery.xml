@@ -39,7 +39,7 @@
         <!-- copy the src/main/resources directory in the zip -->
         <fileSet>
           <filtered>false</filtered>
-          <outputDirectory>/</outputDirectory>
+          <outputDirectory>/documentation</outputDirectory>
           <directory>src/main/resources/</directory>
           <excludes>
 
@@ -48,7 +48,7 @@
         <fileSet>
           <!-- remplace les placeholders par les valeurs du build -->
           <filtered>true</filtered>
-          <outputDirectory>/</outputDirectory>
+          <outputDirectory>/documentation</outputDirectory>
           <directory>src/main/resources</directory>
           <includes>
 

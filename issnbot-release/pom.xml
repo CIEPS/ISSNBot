@@ -40,6 +40,25 @@
                     <attach>true</attach>
                 </configuration>
             </plugin>
+
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>exec-maven-plugin</artifactId>
+              <version>1.2</version>
+              <executions>
+                <execution>
+                  <id>generate-update-codes-documentation</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>java</goal>
+                  </goals>
+                  <configuration>
+                    <mainClass>org.issn.issnbot.doc.UpdateStatusDocumentationGenerator</mainClass>
+                    <arguments>${project.basedir}/src/main/resources/UpdateStatuses.md</arguments>
+                  </configuration>
+                </execution>
+              </executions>           
+            </plugin>
 		</plugins>
 	</build>
 

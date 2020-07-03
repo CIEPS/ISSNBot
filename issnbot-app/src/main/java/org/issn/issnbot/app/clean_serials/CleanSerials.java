@@ -40,6 +40,7 @@ public class CleanSerials implements CommandIfc {
 			bot.setWikidata_maxLagFirstWaitTime(args.getMaxLagFirstWaitTime());
 			bot.setWikidata_maxLagBackoffFactor(args.getMaxLagBackoffFactor());
 			bot.setWikidata_maxLagMaxRetries(args.getMaxLagMaxRetries());
+			bot.setWikidata_averageTimePerEdit(args.getAverageTimePerEdit());
 			
 			bot.setDryRun(!args.isUpdate());
 			bot.initConnection();
