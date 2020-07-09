@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>org.issn</groupId>
 		<artifactId>issnbot-root-pom</artifactId>
-	    <version>1.0</version>
+	    <version>1.1</version>
         <relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -57,8 +57,20 @@
                     <arguments>${project.basedir}/src/main/resources/UpdateStatuses.md</arguments>
                   </configuration>
                 </execution>
+                <execution>
+                  <id>generate-algorithms-documentation</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>java</goal>
+                  </goals>
+                  <configuration>
+                    <mainClass>org.issn.issnbot.doc.AlgorithmDocumentationGenerator</mainClass>
+                    <arguments>${project.basedir}/src/main/resources/UpdateAlgorithms.md</arguments>
+                  </configuration>
+                </execution>
               </executions>           
             </plugin>
+
 		</plugins>
 	</build>
 

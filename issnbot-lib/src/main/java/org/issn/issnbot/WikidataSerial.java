@@ -377,7 +377,7 @@ public class WikidataSerial {
 	@Description(
 			title = "ISSN-L (P7363)",
 			definition=
-			  "The ISSN-L processing is relatively straightforward because it does not hold the ISSN reference (being an identifier):\n"
+			  "The ISSN-L processing is relatively straightforward because it does not hold the ISSN reference (being an identifier), like title, language etc.:\n"
 			+ "- If multiple ISSN-L are found on the same item, this is not a situation we can deal with, so this is considered an error.\n"
 			+ "- If an ISSN-L statement with the same value does not exist, then:\n"
 			+ "  - Create a new ISSN-L statement on the item, without any reference.\n",
