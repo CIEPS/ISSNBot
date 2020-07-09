@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.issn.issnbot.doc.Description;
 import org.issn.issnbot.listeners.IssnBotListener.PropertyStatus;
 import org.issn.issnbot.listeners.SerialResult;
 import org.issn.issnbot.model.IssnValue;
@@ -45,7 +46,18 @@ public class WikidataSerial {
 	}
 	
 	
-	
+	@Description(
+			title = "Title (P1476)",
+			definition=
+			  "Title and Language processing are similar:\n"
+			+ "- If a title with the same value (case-insensitive, unicode-encoding insensitive) does not exist, then:\n"
+			+ "  - if a single title value exists with a proper ISSN reference, it indicates the value in ISSN register has changed : update the existing title statement with ISSN reference.\n"
+			+ "  - otherwise if no such values exist, create a new title statement on the item, with an ISSN reference.\n"
+			+ "- Otherwise, if the existing value is the same but does not have proper ISSN reference, add ISSN reference on the existing statement.\n"
+			+ "- Otherwise, if the existing value already have an ISSN reference, but with a different ISSN, update the reference to the new reference ISSN.\n"
+			+ "- Otherwise (same value exists, with ISSN reference having correct value), don't do anything.\n",
+			order=4
+	)
 	public Optional<Statement> updateTitle(SerialEntry serial)
 	throws IssnBotException {
 		String title = serial.getTitle().getValue();
@@ -100,7 +112,20 @@ public class WikidataSerial {
 		
 		return Optional.ofNullable((sb != null)?sb.build():null);
 	}
-	
+
+	@Description(
+			title = "Language (P407)",
+			definition=
+			  "Title and Language processing are similar:\n"
+			+ "- If the provided language code cannot be translated to a Wikidata QID, then this is an error.\n"
+			+ "- If a language with the same value does not exist, then:\n"
+			+ "  - if a single language value exists with a proper ISSN reference, it indicates the value in ISSN register has changed : update the existing statement with ISSN reference.\n"
+			+ "  - otherwise if no such values exist, create a new language statement on the item, with an ISSN reference.\n"
+			+ "- Otherwise, if the existing value is the same but does not have proper ISSN reference, add ISSN reference on the existing statement.\n"
+			+ "- Otherwise, if the existing value already have an ISSN reference, but with a different ISSN, update the reference to the new reference ISSN.\n"
+			+ "- Otherwise (same value exists, with ISSN reference having correct value), don't do anything.\n",
+			order=5
+	)
 	public Optional<Statement> updateLanguage(SerialEntry serial, WikidataIdProviderIfc langIdProvider) 
 	throws IssnBotException {
 		String langCode = serial.getLang().getValue();
@@ -157,7 +182,20 @@ public class WikidataSerial {
 		return Optional.ofNullable((sb != null)?sb.build():null);
 		
 	}
-	
+
+	@Description(
+			title = "Place of publication (P291)",
+			definition=
+			  "The place of publication processing is specific in that we consider that the place of publication can change over time in ISSN register and history should be tracked by deprecating previous values:\n"
+			+ "- If the provided country code cannot be translated to a Wikidata QID, then this is an error.\n"
+			+ "- If a place of publication with the same value does not exist, then:\n"
+			+ "  - Create a new place of publication statement on the item, with an ISSN reference.\n"
+			+ "  - Any other existing non-deprecated place of publication statements on the item with an ISSN reference (and a difference value) are marked as deprecated.\n"
+			+ "- Otherwise, if the existing value is the same but does not have proper ISSN reference, add ISSN reference on the existing statement.\n"
+			+ "- Otherwise, if the existing value already have an ISSN reference, but with a different ISSN, update the reference to the new reference ISSN.\n"
+			+ "- Otherwise (same value exists, with ISSN reference having correct value), don't do anything.\n",
+			order=6
+	)
 	public List<Statement> updatePlaceOfPublicationStatement(SerialEntry serial, WikidataIdProviderIfc countryIdProvider) 
 	throws IssnBotException {
 		
@@ -239,6 +277,21 @@ public class WikidataSerial {
 		return result;
 	}
 	
+	@Description(
+			title = "Official Website (P856)",
+			definition=
+			  "The official website processing is specific in that 1/ we consider that it can change over time and history should be tracked by deprecating previous values and 2/ it is multivalued:\n"
+			+ "- For every website value to be synchronized:\n"
+			+ "  - If an official website statement with the same value (ignoring final '/') does not exist, then:\n"
+			+ "    - Create a new official website statement on the item, with an ISSN reference.\n"
+			+ "  - Otherwise, if the existing value is the same but does not have proper ISSN reference, add ISSN reference on the existing statement.\n"
+			+ "  - Otherwise, if the existing value already have an ISSN reference, but with a different ISSN, update the reference to the new reference ISSN.\n"
+			+ "  - Otherwise (same value exists, with ISSN reference having correct value), don't do anything.\n"
+			+ "- Then, for every existing official website statement on the item:\n"
+			+ "  - If its value it not in the values to be synchronized, and it is not deprecated, and it has an ISSN reference, then deprecate it."
+			+ "    We consider a previously synchronized value has changed in the ISSN register, and we deprecated the value.",
+			order=7
+	)
 	public List<Statement> updateOfficialWebsiteStatements(SerialEntry serial) 
 	throws IssnBotException {			
 		
@@ -321,6 +374,15 @@ public class WikidataSerial {
 		return result;
 	}
 	
+	@Description(
+			title = "ISSN-L (P7363)",
+			definition=
+			  "The ISSN-L processing is relatively straightforward because it does not hold the ISSN reference (being an identifier):\n"
+			+ "- If multiple ISSN-L are found on the same item, this is not a situation we can deal with, so this is considered an error.\n"
+			+ "- If an ISSN-L statement with the same value does not exist, then:\n"
+			+ "  - Create a new ISSN-L statement on the item, without any reference.\n",
+			order=1
+	)
 	public Optional<Statement> updateIssnLStatement(SerialEntry serial) 
 	throws IssnBotException {		
 		
@@ -368,6 +430,19 @@ public class WikidataSerial {
 		return updateSingleIssnStatement(serial.getIssnL(), (serial.getIssns().size() > 3)?serial.getIssns().get(3):null, 4, WikidataIssnModel.FAKE_ISSN4_PROPERTY_ID, formatProvider);
 	}
 	
+	@Description(
+			title = "ISSN (P236)",
+			definition=
+			  "The ISSN processing is specific in that it holds 2 qualifiers, the associated Key Title and the associated Format:\n"
+			+ "- If the provided format code cannot be mapped to a Wikidata QID, then this is an error.\n"
+			+ "- If an ISSN statement with the same value does not exist (not comparing qualifiers), then:\n"
+			+ "  - Create a new ISSN statement on the item, with a 'named as' qualifier holding the Key Title, and a 'distribution method' qualifier holding the format.\n"
+			+ "- Otherwise, if an ISSN value exists but does not have 'named as' and 'distribution method' qualifiers:\n"
+			+ "  - Add a 'named as' qualifier holding the Key Title, and a 'distribution method' qualifier holding the format, on the existing ISSN value.\n"
+			+ "- Otherwise, if an ISSN value exists, and has 'named as' and 'distribution method' qualifiers but with different values:\n"
+			+ "  - Update its 'named as' and 'distribution method' qualifiers (overwrite existing values).\n",
+			order=8
+	)
 	private Optional<Statement> updateSingleIssnStatement(String issnl, IssnValue issnValue, int issnIndex, int fakePropId, WikidataIdProviderIfc formatProvider)
 	throws IssnBotException {		
 		
@@ -438,6 +513,16 @@ public class WikidataSerial {
 		return Optional.ofNullable((sb != null)?sb.build():null);
 	}
 	
+	@Description(
+			title = "Unknown ISSN deletion",
+			definition=
+			  "It may happen than ISSN gets reorganized in different ISSN-L families. In that case, ISSN values can 'move' on other serials:\n"
+			  + "- For every ISSN statement on the item:\n"
+			  + "  - If the statements has 'named as' and 'distribution format' qualifiers (indicating it comes from ISSN register)...\n"
+			  + "  - AND if that ISSN value is not associated to the serial in the input data, then:\n"
+			  + "    - Delete that statement.\n",
+			order=9
+	)
 	public List<Statement> getUnknownIssnStatementsToDelete(SerialEntry serial) 
 	throws IssnBotException {		
 		
@@ -473,6 +558,17 @@ public class WikidataSerial {
 		return result;
 	}
 	
+	@Description(
+			title = "Cancelled ISSN (P236 with deprecated rank)",
+			definition=
+			  "Cancelled ISSNs are wrong identifiers that have once been issued but are incorrect. They are synchronized to Wikidata because references to them may potentially exists.\n"
+			+ "They are stored as P236 values with a deprecated rank and a 'reason for deprecation' stating 'incorrect identifier'.\n"
+			+ "- If an ISSN statement, with deprecated rank and with the same value does not exist (not comparing qualifiers), then:\n"
+			+ "  - If an ISSN statement exists, but not having deprecated rank, set its rank to deprecated.\n"
+			+ "  - Otherwise, create an ISSN statement with deprecated rank and 'reason for deprecation'='incorrect identifier'\n"
+			+ "- Otherwise, the value already exists with deprecated rank, so do nothing.\n",
+			order=10
+	)
 	public List<Statement> updateCancelledIssnStatements(SerialEntry serial) 
 	throws IssnBotException {				
 		List<Statement> result = new ArrayList<Statement>();
@@ -531,6 +627,17 @@ public class WikidataSerial {
 		return result;
 	}
 	
+	@Description(
+			title = "Unknown Cancelled ISSN deletion (P236 with deprecated rank)",
+			definition=
+			  "It may happen than Cancelled ISSNs gets reorganized in different ISSN-L families. In that case, Cancelled ISSN values can 'move' on other serials:\n"
+			  + "- For every ISSN statement on the item:\n"
+			  + "  - If the statements has 'deprecated' rank and has a reference 'reason for deprecation' equal to 'incorrect identifier value' (indicating a cancelled ISSN), then:\n"
+			  + "  - AND if value is not in the Cancelled ISSNs associated to the serial in the input data, then:\n"
+			  + "    - Delete that statement.\n",
+			order=11
+			  
+	)
 	public List<Statement> getUnknownCancelledIssnStatementsToDelete(SerialEntry serial) 
 	throws IssnBotException {		
 		
@@ -563,7 +670,14 @@ public class WikidataSerial {
 		return result;
 	}
 	
-	
+	@Description(
+			title = "Label",
+			definition=
+			  "Label is created if it does not already exists.\n"
+			  + "- If lang code is mul or mis, don't do anything.\n"
+			  + "- If there is no title in the provided language, and the title does not exists as an alias, add it as a label\n",
+			order=2
+	)
 	public List<MonolingualTextValue> getLabelsToAdd(SerialEntry serial)
 	throws IssnBotException {
 
@@ -595,6 +709,14 @@ public class WikidataSerial {
 		return Collections.emptyList();
 	}
 	
+	@Description(
+			title = "Alias",
+			definition=
+			  "Label is created if it does not already exists.\n"
+			  + "- If lang code is mul or mis, don't do anything.\n"
+			  + "- If the ISSN title does not exist in the provided language neither as a label nor as an alias, add it as an alias\n",
+			order=3			  
+	)
 	public List<MonolingualTextValue> getAliasesToAdd(SerialEntry serial, boolean alreadyAddedLabel) {
 		
 		// availability of language code was checked before
