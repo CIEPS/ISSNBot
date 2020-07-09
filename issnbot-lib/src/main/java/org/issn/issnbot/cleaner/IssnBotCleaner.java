@@ -175,7 +175,7 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 						listeners.stream().forEach(l -> l.errorItem(qid, e.getMessage()));
 						return;
 					} else {
-						int updatedNbRetries = nbRetries++;
+						int updatedNbRetries = ++nbRetries;
 						log.info("Got an API exception, retrying for "+updatedNbRetries+" time on a maximum of "+this.maxNbRetries+" times");
 						clean(qid, updatedNbRetries);
 					}

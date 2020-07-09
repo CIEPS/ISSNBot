@@ -306,7 +306,7 @@ public class IssnBot extends AbstractWikidataBot {
 							listeners.stream().forEach(l -> l.errorSerial(entry, true, e.getMessage()));
 							return;
 						} else {
-							int updatedNbRetries = nbRetries++;
+							int updatedNbRetries = ++nbRetries;
 							log.info("Got an API exception, retrying for "+updatedNbRetries+" time on a maximum of "+this.maxNbRetries+" times");
 							processSerial(entry, updatedNbRetries);
 						}						
