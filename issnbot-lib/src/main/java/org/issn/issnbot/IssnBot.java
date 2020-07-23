@@ -220,7 +220,7 @@ public class IssnBot extends AbstractWikidataBot {
 			wikidataSerial.updateLanguage(entry, this.languageIdProvider).ifPresent(statementsToAdd::add);
 
 			// process place of publication statement
-			wikidataSerial.updatePlaceOfPublicationStatement(entry, this.countryIdProvider).stream().forEach(statementsToAdd::add);
+			wikidataSerial.updateCountryOfOriginStatement(entry, this.countryIdProvider).stream().forEach(statementsToAdd::add);
 			
 			// process official websites statements
 			wikidataSerial.updateOfficialWebsiteStatements(entry).stream().forEach(statementsToAdd::add);

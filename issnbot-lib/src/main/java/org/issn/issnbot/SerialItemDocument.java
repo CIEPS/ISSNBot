@@ -114,8 +114,8 @@ public class SerialItemDocument {
 	 * @param country
 	 * @return
 	 */
-	public Optional<Statement> findPlaceOfPublicationStatement(ItemIdValue country) {
-		StatementGroup statements = this.itemDocument.findStatementGroup(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID));
+	public Optional<Statement> findCountryOfOriginStatement(ItemIdValue country) {
+		StatementGroup statements = this.itemDocument.findStatementGroup(WikidataIssnModel.toWikidataProperty(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID));
 		if(statements == null) {
 			return Optional.empty();
 		}

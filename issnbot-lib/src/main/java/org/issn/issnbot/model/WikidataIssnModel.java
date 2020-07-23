@@ -33,7 +33,9 @@ public final class WikidataIssnModel {
 	
 	public static final int OFFICIAL_WEBSITE_PROPERTY_ID = 856;
 	
-	public static final int PLACE_OF_PUBLICATION_PROPERTY_ID = 291;
+	public static final int COUNTRY_OF_ORIGIN_PROPERTY_ID = 495;
+	
+	// public static final int PLACE_OF_PUBLICATION_PROPERTY_ID = 291;
 	
 	public static final int STATED_IN_PROPERTY_ID = 248;
 	

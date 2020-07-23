@@ -31,7 +31,7 @@ public class IssnBotCleanerStatusesCSVWriter {
 		printer.print("Message");
 		printer.print("Title (P"+WikidataIssnModel.TITLE_PROPERTY_ID+")");
 		printer.print("Language (P"+WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID+")");
-		printer.print("Place of Publication (P"+WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID+")");
+		printer.print("Country of origin (P"+WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID+")");
 		printer.print("Official Website (P"+WikidataIssnModel.OFFICIAL_WEBSITE_PROPERTY_ID+")");
 		printer.print("ISSN-L (P"+WikidataIssnModel.ISSNL_PROPERTY_ID+")");
 		printer.println();

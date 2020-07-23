@@ -184,26 +184,33 @@ public class WikidataSerial {
 	}
 
 	@Description(
-			title = "Place of publication (P291)",
+			title = "Country of origina (P495)",
 			definition=
-			  "The place of publication processing is specific in that we consider that the place of publication can change over time in ISSN register and history should be tracked by deprecating previous values:\n"
+			  "The country of origin processing is specific in that we consider that the place of publication can change over time in ISSN register and history should be tracked by deprecating previous values:\n"
 			+ "- If the provided country code cannot be translated to a Wikidata QID, then this is an error.\n"
-			+ "- If a place of publication with the same value does not exist, then:\n"
-			+ "  - Create a new place of publication statement on the item, with an ISSN reference.\n"
-			+ "  - Any other existing non-deprecated place of publication statements on the item with an ISSN reference (and a difference value) are marked as deprecated.\n"
+			+ "- If a country of origin with the same value does not exist, then:\n"
+			+ "  - Create a new country of origin statement on the item, with an ISSN reference.\n"
+			+ "  - Any other existing non-deprecated country of origin statements on the item with an ISSN reference (and a difference value) are marked as deprecated.\n"
 			+ "- Otherwise, if the existing value is the same but does not have proper ISSN reference, add ISSN reference on the existing statement.\n"
 			+ "- Otherwise, if the existing value already have an ISSN reference, but with a different ISSN, update the reference to the new reference ISSN.\n"
 			+ "- Otherwise (same value exists, with ISSN reference having correct value), don't do anything.\n",
 			order=6
 	)
-	public List<Statement> updatePlaceOfPublicationStatement(SerialEntry serial, WikidataIdProviderIfc countryIdProvider) 
+	public List<Statement> updateCountryOfOriginStatement(SerialEntry serial, WikidataIdProviderIfc countryIdProvider) 
 	throws IssnBotException {
 		
 		List<Statement> result = new ArrayList<Statement>();
 		
 		// if not set, skip
 		if(serial.getCountry() == null || serial.getCountry().getValue() == null) {
-			notify(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.EMPTY);
+			notify(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.EMPTY);
+			return Collections.emptyList();
+		}
+		
+		// if international, skip
+		if(serial.getCountry().getValue().equalsIgnoreCase("INT")) {
+			log.debug(serial.getIssnL()+" - Country of origin : INT (skip)");
+			notify(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.EMPTY);
 			return Collections.emptyList();
 		}
 		
@@ -217,19 +224,19 @@ public class WikidataSerial {
 		}
 		
 		StatementBuilder sb = null;
-		Optional<Statement> existingPlaceOfPublicationStatement = serialItem.findPlaceOfPublicationStatement(countryValue);
+		Optional<Statement> existingPlaceOfPublicationStatement = serialItem.findCountryOfOriginStatement(countryValue);
 		
 		if(!existingPlaceOfPublicationStatement.isPresent()) {
-			log.debug(serial.getIssnL()+" - Place of Publication : CREATE");
-			notify(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.CREATED);
+			log.debug(serial.getIssnL()+" - Country of origin : CREATE");
+			notify(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.CREATED);
 
 			sb = StatementBuilder
-					.forSubjectAndProperty(serialItem.getEntityId(), WikidataIssnModel.toWikidataProperty(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID))
+					.forSubjectAndProperty(serialItem.getEntityId(), WikidataIssnModel.toWikidataProperty(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID))
 					.withValue(countryValue)
 					.withReference(WikidataSerial.buildStatementReference(referenceIssn));
 			
 			// if a previous value was known, we should deprecated it
-			List<Statement> statementsWithReference = serialItem.findStatementsWithIssnReference(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID);
+			List<Statement> statementsWithReference = serialItem.findStatementsWithIssnReference(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID);
 			if(!statementsWithReference.isEmpty()) {				
 				// all these statements need to be deprecated
 				boolean atLeastOneDeprecation = false;
@@ -241,34 +248,34 @@ public class WikidataSerial {
 				}
 				
 				if(atLeastOneDeprecation) {
-					log.debug(serial.getIssnL()+" - Place of Publication previous value : DEPRECATE");
-					notifyPreviousValueAction(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_DEPRECATED);
+					log.debug(serial.getIssnL()+" - Country of origin previous value : DEPRECATE");
+					notifyPreviousValueAction(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_DEPRECATED);
 				} else {
-					log.debug(serial.getIssnL()+" - Place of Publication previous value : UNTOUCHED");
-					notifyPreviousValueAction(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_UNTOUCHED);
+					log.debug(serial.getIssnL()+" - Country of origin previous value : UNTOUCHED");
+					notifyPreviousValueAction(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_UNTOUCHED);
 				}
 			} else {
-				log.debug(serial.getIssnL()+" - Place of Publication previous value : NONE");
-				notifyPreviousValueAction(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_NONE);
+				log.debug(serial.getIssnL()+" - Country of origin previous value : NONE");
+				notifyPreviousValueAction(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_NONE);
 			}
 			
 		} else if(!SerialItemDocument.hasIssnReference(existingPlaceOfPublicationStatement.get())) {
-			log.debug(serial.getIssnL()+" - Place of Publication : ADD REFERENCE");
-			notify(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.ADDED_REFERENCE);
+			log.debug(serial.getIssnL()+" - Country of origin : ADD REFERENCE");
+			notify(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.ADDED_REFERENCE);
 			
 			// if existing statement does not have ISSN references, add them
 			sb = copy(existingPlaceOfPublicationStatement.get()).withReference(buildStatementReference(referenceIssn));	
 
 		} else if(!SerialItemDocument.hasIssnReferenceValue(existingPlaceOfPublicationStatement.get(), referenceIssn)) {
-			log.debug(serial.getIssnL()+" - Place of Publication : UPDATE REFERENCE");
-			notify(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.UPDATE_REFERENCE);
+			log.debug(serial.getIssnL()+" - Country of origin : UPDATE REFERENCE");
+			notify(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.UPDATE_REFERENCE);
 			// the statement with the same value exists, it has an ISSN reference, but not with the same ISSN number, so update it
 			sb = copyWithoutIssnReference(existingPlaceOfPublicationStatement.get()).withReference(buildStatementReference(referenceIssn));
 		} else {
-			log.debug(serial.getIssnL()+" - Place of Publication : NOTHING");
-			notify(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.NOTHING);
+			log.debug(serial.getIssnL()+" - Country of origin : NOTHING");
+			notify(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.NOTHING);
 			// we need a value for the previous place of publication action
-			notifyPreviousValueAction(WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_NONE);
+			notifyPreviousValueAction(WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, WikidataUpdateStatus.PREVIOUS_VALUE_NONE);
 		}
 		
 		if(sb != null) {
@@ -675,7 +682,7 @@ public class WikidataSerial {
 			definition=
 			  "Label is created if it does not already exists.\n"
 			  + "- If lang code is mul or mis, don't do anything.\n"
-			  + "- If there is no title in the provided language, and the title does not exists as an alias, add it as a label\n",
+			  + "- If there is no label in the provided language, and the title value does not exists as an alias, add it as a label\n",
 			order=2
 	)
 	public List<MonolingualTextValue> getLabelsToAdd(SerialEntry serial)
@@ -712,7 +719,7 @@ public class WikidataSerial {
 	@Description(
 			title = "Alias",
 			definition=
-			  "Label is created if it does not already exists.\n"
+			  "Alias is created if it does not already exists.\n"
 			  + "- If lang code is mul or mis, don't do anything.\n"
 			  + "- If the ISSN title does not exist in the provided language neither as a label nor as an alias, add it as an alias\n",
 			order=3			  

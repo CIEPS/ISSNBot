@@ -35,14 +35,14 @@ public class UpdateStatusesCSVWriter implements UpdateStatusesWriter {
 		printer.print("Alias");
 		printer.print("Title (P"+WikidataIssnModel.TITLE_PROPERTY_ID+")");
 		printer.print("Language (P"+WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID+")");
-		printer.print("Place of Publication (P"+WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID+")");
+		printer.print("Country of origin (P"+WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID+")");
 		printer.print("Official Website (P"+WikidataIssnModel.OFFICIAL_WEBSITE_PROPERTY_ID+")");
 		printer.print("ISSN1 (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.print("ISSN2 (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.print("ISSN3 (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.print("ISSN4 (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.print("Cancelled ISSNs (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
-		printer.print("Previous values of Place of Publication (P"+WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID+")");
+		printer.print("Previous values of Country of origin (P"+WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID+")");
 		printer.print("Previous values of Place of Official Website (P"+WikidataIssnModel.OFFICIAL_WEBSITE_PROPERTY_ID+")");
 		printer.print("Previous values of ISSN (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");
 		printer.print("Previous Cancelled ISSNs (P"+WikidataIssnModel.ISSN_PROPERTY_ID+")");

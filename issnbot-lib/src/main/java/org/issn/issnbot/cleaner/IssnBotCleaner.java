@@ -109,7 +109,7 @@ public class IssnBotCleaner extends AbstractWikidataBot {
 		List<Statement> statementsToDelete = new ArrayList<>();
 		findStatementsToClean(serialItemDocument, WikidataIssnModel.TITLE_PROPERTY_ID, statuses).stream().forEach(statementsToDelete::add);
 		findStatementsToClean(serialItemDocument, WikidataIssnModel.LANGUAGE_OF_WORK_OR_NAME_PROPERTY_ID, statuses).stream().forEach(statementsToDelete::add);
-		findStatementsToClean(serialItemDocument, WikidataIssnModel.PLACE_OF_PUBLICATION_PROPERTY_ID, statuses).stream().forEach(statementsToDelete::add);
+		findStatementsToClean(serialItemDocument, WikidataIssnModel.COUNTRY_OF_ORIGIN_PROPERTY_ID, statuses).stream().forEach(statementsToDelete::add);
 		findStatementsToClean(serialItemDocument, WikidataIssnModel.OFFICIAL_WEBSITE_PROPERTY_ID, statuses).stream().forEach(statementsToDelete::add);
 		findStatementsToClean(serialItemDocument, WikidataIssnModel.ISSNL_PROPERTY_ID, statuses).stream().forEach(statementsToDelete::add);
 		// don't delete ISSN property
