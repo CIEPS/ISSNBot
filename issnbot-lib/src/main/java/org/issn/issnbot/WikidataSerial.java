@@ -184,7 +184,7 @@ public class WikidataSerial {
 	}
 
 	@Description(
-			title = "Country of origina (P495)",
+			title = "Country of origin (P495)",
 			definition=
 			  "The country of origin processing is specific in that we consider that the place of publication can change over time in ISSN register and history should be tracked by deprecating previous values:\n"
 			+ "- If the provided country code cannot be translated to a Wikidata QID, then this is an error.\n"
